@@ -12,6 +12,7 @@ const ACTIONS = {
   REMOVE_SUB_SERVICE: 'REMOVE_SUB_SERVICE',
   UPDATE_CUSTOM_HEADER: 'UPDATE_CUSTOM_HEADER',
   CLEAR_SELECTIONS: 'CLEAR_SELECTIONS',
+  LOAD_EXISTING_DATA: 'LOAD_EXISTING_DATA',
   RESET: 'RESET'
 };
 
@@ -102,6 +103,34 @@ function quotationReducer(state, action) {
     case ACTIONS.CLEAR_SELECTIONS:
       return { ...state, selectedHeaders: [], allSelectedSubServices: new Set() };
 
+    case ACTIONS.LOAD_EXISTING_DATA: {
+      const { headers } = action.payload;
+      const allSubServices = new Set();
+      
+      // Rebuild the sub-services set from loaded data
+      headers.forEach(header => {
+        header.services?.forEach(service => {
+          // Handle different subServices formats (array or object)
+          if (Array.isArray(service.subServices)) {
+            service.subServices.forEach(subService => {
+              allSubServices.add(subService.id);
+            });
+          } else if (service.subServices && typeof service.subServices === 'object') {
+            // If subServices is an object (key-value pairs), add the keys
+            Object.keys(service.subServices).forEach(subServiceId => {
+              allSubServices.add(subServiceId);
+            });
+          }
+        });
+      });
+      
+      return {
+        ...state,
+        selectedHeaders: headers,
+        allSelectedSubServices: allSubServices
+      };
+    }
+
     case ACTIONS.RESET:
       return initialState;
 
@@ -149,6 +178,7 @@ export function QuotationProvider({ children }) {
   const removeSubService = useCallback((headerIndex, serviceId, subServiceId) => dispatch({ type: ACTIONS.REMOVE_SUB_SERVICE, payload: { headerIndex, serviceId, subServiceId } }), []);
   const updateCustomHeader = useCallback((headerIndex, customName) => dispatch({ type: ACTIONS.UPDATE_CUSTOM_HEADER, payload: { headerIndex, customName } }), []);
   const clearSelections = useCallback(() => dispatch({ type: ACTIONS.CLEAR_SELECTIONS }), []);
+  const loadExistingData = useCallback((headers) => dispatch({ type: ACTIONS.LOAD_EXISTING_DATA, payload: { headers } }), []);
   const reset = useCallback(() => dispatch({ type: ACTIONS.RESET }), []);
 
   const value = {
@@ -162,6 +192,7 @@ export function QuotationProvider({ children }) {
     removeSubService,
     updateCustomHeader,
     clearSelections,
+    loadExistingData,
     reset
   };
 

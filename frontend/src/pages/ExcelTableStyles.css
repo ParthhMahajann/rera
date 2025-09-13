@@ -1,0 +1,386 @@
+/* Excel-like Dashboard Table Styles */
+
+/* Global table container styling */
+.excel-table-container {
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Table header styling - Excel-like appearance */
+.excel-table-header {
+  background: linear-gradient(180deg, #f6f8fa 0%, #e1e7ed 100%);
+  border-bottom: 2px solid #d0d7de;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #24292f;
+  text-transform: none;
+  letter-spacing: 0.025em;
+}
+
+.excel-table-header th {
+  padding: 10px 12px;
+  border-right: 1px solid #d0d7de;
+  position: relative;
+  user-select: none;
+}
+
+.excel-table-header th:last-child {
+  border-right: none;
+}
+
+.excel-table-header th:hover {
+  background: linear-gradient(180deg, #eef4fd 0%, #d7e3f0 100%);
+}
+
+/* Table body styling */
+.excel-table-body {
+  background-color: #ffffff;
+}
+
+.excel-table-body tr {
+  border-bottom: 1px solid #d0d7de;
+  transition: background-color 0.15s ease;
+}
+
+.excel-table-body tr:nth-child(even) {
+  background-color: #f6f8fa;
+}
+
+.excel-table-body tr:hover {
+  background-color: #eef4fd !important;
+  border-color: #0969da;
+}
+
+.excel-table-body td {
+  padding: 8px 12px;
+  border-right: 1px solid #d0d7de;
+  font-size: 0.8125rem;
+  color: #24292f;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.excel-table-body td:last-child {
+  border-right: none;
+}
+
+/* Cell focus styling */
+.excel-table-body td:focus-within {
+  background-color: #fff;
+  border: 2px solid #0969da;
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px rgba(9, 105, 218, 0.3);
+}
+
+/* Excel-like search bar styling */
+.excel-search-container {
+  background: linear-gradient(135deg, #f6f8fa 0%, #e1e7ed 100%);
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.excel-search-input {
+  background-color: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.excel-search-input:focus {
+  border-color: #0969da;
+  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+  outline: none;
+}
+
+/* Action buttons Excel-like styling */
+.excel-action-button {
+  background-color: #f6f8fa;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  color: #24292f;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.excel-action-button:hover {
+  background-color: #eef4fd;
+  border-color: #0969da;
+  color: #0969da;
+}
+
+/* Status chips Excel-like */
+.excel-status-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  min-width: 60px;
+}
+
+.excel-status-chip.completed {
+  background-color: #d4f6d4;
+  color: #137e13;
+  border: 1px solid #89e589;
+}
+
+.excel-status-chip.approved {
+  background-color: #d4f6d4;
+  color: #137e13;
+  border: 1px solid #89e589;
+}
+
+.excel-status-chip.rejected {
+  background-color: #ffd6d6;
+  color: #d1242f;
+  border: 1px solid #ff8e8e;
+}
+
+.excel-status-chip.pending {
+  background-color: #fff5b4;
+  color: #7d4e00;
+  border: 1px solid #ffdf5d;
+}
+
+.excel-status-chip.draft {
+  background-color: #eaeef2;
+  color: #656d76;
+  border: 1px solid #d0d7de;
+}
+
+/* Excel-like number formatting */
+.excel-number-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+}
+
+/* Excel-like sorting indicators */
+.excel-sort-indicator {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.75rem;
+  color: #656d76;
+}
+
+.excel-sort-indicator.asc::after {
+  content: "▲";
+}
+
+.excel-sort-indicator.desc::after {
+  content: "▼";
+}
+
+/* Scrollbar styling for Excel-like appearance */
+.excel-table-container::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+.excel-table-container::-webkit-scrollbar-track {
+  background-color: #f6f8fa;
+  border: 1px solid #d0d7de;
+}
+
+.excel-table-container::-webkit-scrollbar-thumb {
+  background-color: #d0d7de;
+  border: 2px solid #f6f8fa;
+  border-radius: 8px;
+}
+
+.excel-table-container::-webkit-scrollbar-thumb:hover {
+  background-color: #b1bac4;
+}
+
+/* Excel-like selection highlighting */
+.excel-row-selected {
+  background-color: #0969da !important;
+  color: white;
+}
+
+.excel-row-selected td {
+  border-color: #0969da;
+  color: white;
+}
+
+/* Excel-like cell borders and grid */
+.excel-grid-lines {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.excel-grid-lines th,
+.excel-grid-lines td {
+  border: 1px solid #d0d7de;
+  border-top: none;
+  border-left: none;
+}
+
+.excel-grid-lines thead th {
+  border-top: 1px solid #d0d7de;
+}
+
+.excel-grid-lines tbody tr:first-child td {
+  border-top: 1px solid #d0d7de;
+}
+
+.excel-grid-lines th:first-child,
+.excel-grid-lines td:first-child {
+  border-left: 1px solid #d0d7de;
+}
+
+/* Compact/Dense table styling */
+.excel-table-dense td,
+.excel-table-dense th {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+}
+
+.excel-table-dense .excel-status-chip {
+  padding: 1px 6px;
+  font-size: 0.6875rem;
+}
+
+/* Excel-like freeze pane effect for header */
+.excel-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(180deg, #f6f8fa 0%, #e1e7ed 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Print-friendly styles */
+@media print {
+  .excel-table-container {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  .excel-table-body tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  .excel-action-button {
+    display: none;
+  }
+}
+
+/* Mobile responsive Excel-like styling */
+@media (max-width: 768px) {
+  .excel-table-container {
+    font-size: 0.75rem;
+  }
+
+  .excel-table-body td,
+  .excel-table-header th {
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+
+  .excel-search-container {
+    padding: 12px;
+  }
+}
+
+/* Loading state styling */
+.excel-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(246, 248, 250, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  color: #656d76;
+}
+
+/* Excel-like data validation indicators */
+.excel-validation-error {
+  border: 2px solid #d1242f !important;
+  background-color: #ffd6d6;
+}
+
+.excel-validation-warning {
+  border: 2px solid #fb8500 !important;
+  background-color: #fff5b4;
+}
+
+/* Context menu styling */
+.excel-context-menu {
+  background-color: white;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  font-size: 0.875rem;
+  z-index: 1000;
+}
+
+.excel-context-menu-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f6f8fa;
+}
+
+.excel-context-menu-item:hover {
+  background-color: #eef4fd;
+}
+
+.excel-context-menu-item:last-child {
+  border-bottom: none;
+}
+
+/* Excel-like formula bar (if needed) */
+.excel-formula-bar {
+  background-color: white;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+}
+
+/* Excel-like toolbar */
+.excel-toolbar {
+  background: linear-gradient(180deg, #f6f8fa 0%, #e1e7ed 100%);
+  border-bottom: 1px solid #d0d7de;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.excel-toolbar-button {
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.excel-toolbar-button:hover {
+  background-color: #eef4fd;
+  border-color: #0969da;
+}
+
+.excel-toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background-color: #d0d7de;
+  margin: 0 4px;
+}

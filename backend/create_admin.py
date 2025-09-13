@@ -14,7 +14,8 @@ with app.app_context():
             fname=fname,
             lname=lname,
             username=username,
-            role="admin",  # admins can approve everything
+            role="admin",
+            threshold=threshold,  # admins can approve everything
         )
         admin.set_password(password)
         db.session.add(admin)

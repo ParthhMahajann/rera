@@ -11,7 +11,7 @@ import {
   Box,
   Alert,
   Grid,
-  Paper
+  CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -25,15 +25,15 @@ const agentTypes = ['Individual', 'Proprietary', 'Private Ltd', 'LLP', 'Partners
 
 export default function CreateAgentQuotation() {
   const navigate = useNavigate();
-  
   const [form, setForm] = useState({
     agentName: '',
     mobile: '',
     email: '',
-    agentType: ''
+    agentType: '',
+    projectRegion: 'Maharashtra'
   });
-
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   function handleChange(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -45,11 +45,11 @@ export default function CreateAgentQuotation() {
 
   const mobileValid = useMemo(() => /^\d{10}$/.test(form.mobile || ''), [form.mobile]);
   const emailValid = useMemo(() => !form.email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email), [form.email]);
-  
-  const canSubmit = form.agentName.trim().length > 0 && 
-                   mobileValid && 
-                   emailValid && 
-                   !!form.agentType;
+
+  const canSubmit = form.agentName.trim().length > 0 &&
+    mobileValid &&
+    emailValid &&
+    !!form.agentType;
 
   function validateForm() {
     const newErrors = {};
@@ -78,140 +78,182 @@ export default function CreateAgentQuotation() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    
     if (!validateForm()) {
       return;
     }
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setErrors({ general: 'Please login to create agent registration' });
+      return;
+    }
+
+    setLoading(true);
     try {
-      // Save agent data to your backend (keeping your existing API call)
-       await createQuotation({
-         developerType: 'agent',
-         developerName: form.agentName,
-         serviceSummary: `Agent Registration - ${form.agentType}`,
-          createdBy: form.agentName,
-          contactMobile: form.mobile,
-         contactEmail: form.email
+      // ✅ CORRECT API CALL - Using the agent registration endpoint
+      const response = await fetch('http://localhost:3001/api/agent-registrations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          agentName: form.agentName,
+          mobile: form.mobile,
+          email: form.email || null,
+          agentType: form.agentType,
+          projectRegion: form.projectRegion
+        })
       });
 
-      // Navigate to service selection page with agent data
-      navigate('/service-selection', {
+      const result = await response.json();
+      if (!response.ok) {
+        setErrors({ general: result.error || 'Failed to create agent registration' });
+        return;
+      }
+
+      // ✅ FIXED: Navigate to agent service selection instead of summary
+      navigate('/agent-service-selection', {
         state: {
-          agentData: {
-            agentName: form.agentName,
-            mobile: form.mobile,
-            email: form.email,
-            agentType: form.agentType
-          }
+          agentData: form,
+          quotationId: result.quotationId
         }
       });
+
     } catch (error) {
-      console.error('Failed to save agent quotation:', error);
-      alert('Failed to save agent quotation. Please try again.');
+      console.error('Failed to create agent registration:', error);
+      setErrors({ general: 'Network error occurred. Please try again.' });
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Agent Registration Quotation
-      </Typography>
-      
-      <StyledCard elevation={3}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom color="primary" sx={{ mb: 3 }}>
-            Step 1: Provide Agent Details
-          </Typography>
-          
-          <Box component="form" onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  label="Agent Name"
-                  variant="outlined"
-                  fullWidth
-                  required
-                  value={form.agentName}
-                  onChange={(e) => handleChange('agentName', e.target.value)}
-                  error={!!errors.agentName}
-                  helperText={errors.agentName}
-                />
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Mobile Number"
-                  variant="outlined"
-                  fullWidth
-                  required
-                  value={form.mobile}
-                  onChange={(e) => handleChange('mobile', e.target.value)}
-                  error={!!errors.mobile}
-                  helperText={errors.mobile || 'Enter 10-digit mobile number'}
-                  inputProps={{ maxLength: 10, pattern: '[0-9]*' }}
-                />
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Email Address"
-                  variant="outlined"
-                  fullWidth
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  error={!!errors.email}
-                  helperText={errors.email || 'Optional'}
-                />
-              </Grid>
-              
-              <Grid item xs={12}>
-                <TextField
-                  select
-                  label="Agent Type"
-                  variant="outlined"
-                  fullWidth
-                  required
-                  value={form.agentType}
-                  onChange={(e) => handleChange('agentType', e.target.value)}
-                  error={!!errors.agentType}
-                  helperText={errors.agentType || 'Select your business entity type'}
-                >
-                  {agentTypes.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
+      <StyledCard>
+        <Typography variant="h4" gutterBottom align="center">
+          Agent Registration Quotation
+        </Typography>
+        <Typography variant="h6" gutterBottom align="center" color="text.secondary">
+          Step 1: Provide Agent Details
+        </Typography>
+
+        {errors.general && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {errors.general}
+          </Alert>
+        )}
+
+        <Box component="form" onSubmit={handleSubmit}>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Agent Name"
+                value={form.agentName}
+                onChange={(e) => handleChange('agentName', e.target.value)}
+                error={!!errors.agentName}
+                helperText={errors.agentName}
+                required
+              />
             </Grid>
-            
-            {!canSubmit && (
-              <Alert severity="info" sx={{ mt: 2 }}>
-                Please fill all required fields correctly to continue.
-              </Alert>
-            )}
-            
-            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Mobile Number"
+                value={form.mobile}
+                onChange={(e) => {
+                  // Only allow digits and max 10 characters
+                  if (/^\d{0,10}$/.test(e.target.value)) {
+                    handleChange('mobile', e.target.value);
+                  }
+                }}
+                error={!!errors.mobile}
+                helperText={errors.mobile || 'Enter 10-digit mobile number'}
+                inputProps={{ maxLength: 10, pattern: '[0-9]*' }}
+                required
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Email Address"
+                type="email"
+                value={form.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                error={!!errors.email}
+                helperText={errors.email || 'Optional'}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Agent Type"
+                value={form.agentType}
+                onChange={(e) => handleChange('agentType', e.target.value)}
+                error={!!errors.agentType}
+                helperText={errors.agentType || 'Select your business entity type'}
+                required
+              >
+                {agentTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                select
+                label="Project Region"
+                value={form.projectRegion}
+                onChange={(e) => handleChange('projectRegion', e.target.value)}
+                helperText="Select the region for RERA registration"
+              >
+                <MenuItem value="Maharashtra">Maharashtra</MenuItem>
+                <MenuItem value="Gujarat">Gujarat</MenuItem>
+                <MenuItem value="Karnataka">Karnataka</MenuItem>
+              </TextField>
+            </Grid>
+
+            <Grid item xs={12}>
+              {!canSubmit && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Please fill all required fields correctly to continue.
+                </Alert>
+              )}
+              
               <Button
                 type="submit"
                 variant="contained"
                 size="large"
-                disabled={!canSubmit}
-                sx={{ minWidth: 200 }}
+                fullWidth
+                disabled={!canSubmit || loading}
+                sx={{ py: 1.5 }}
               >
-                Continue to Service Selection
+                {loading ? (
+                  <>
+                    <CircularProgress size={20} sx={{ mr: 1 }} />
+                    Creating...
+                  </>
+                ) : (
+                  'Continue to Service Selection'
+                )}
               </Button>
-            </Box>
-          </Box>
-        </CardContent>
+              
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
+                Next: Select the services you need for your agent registration
+              </Typography>
+            </Grid>
+          </Grid>
+        </Box>
       </StyledCard>
-      
-      <Paper sx={{ p: 2, mt: 3, backgroundColor: 'grey.50' }}>
-        <Typography variant="body2" color="text.secondary" align="center">
-          Next: Select the services you need for your agent registration
-        </Typography>
-      </Paper>
     </Container>
   );
 }

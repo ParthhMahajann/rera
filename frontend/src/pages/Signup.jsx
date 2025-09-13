@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Signup() {
+  const navigate = useNavigate();
   const [fname, setFname] = useState("");
   const [lname, setLname] = useState("");
   const [username, setUsername] = useState("");
@@ -8,21 +10,53 @@ export default function Signup() {
   const [role, setRole] = useState("user");
   const [threshold, setThreshold] = useState(0);
   const [message, setMessage] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Get current user info to determine role restrictions
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await fetch("http://localhost:3001/api/me", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const userData = await res.json();
+            setCurrentUser(userData);
+          }
+        } catch (error) {
+          console.error('Failed to fetch user info:', error);
+        }
+      }
+    };
+    fetchCurrentUser();
+  }, []);
 
   const handleSignup = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setMessage("❌ Please login to create users");
+      return;
+    }
+
     try {
       const res = await fetch("http://localhost:3001/api/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           fname,
           lname,
           username,
           password,
           role,
-          threshold: role === "manager" ? Math.min(Math.max(threshold, 0), 100) : 0,
+          threshold: Math.min(Math.max(threshold, 0), 100),
         }),
       });
+
       const data = await res.json();
       if (res.ok) {
         setMessage(`✅ ${role} created successfully`);
@@ -36,119 +70,297 @@ export default function Signup() {
         setMessage(`❌ ${data.error}`);
       }
     } catch (err) {
-      setMessage("❌ Failed to signup");
+      setMessage("❌ Failed to create user");
     }
   };
 
+  // Determine available roles based on current user
+  const getAvailableRoles = () => {
+    if (!currentUser) return [];
+    
+    if (currentUser.role === "admin") {
+      return ["user", "manager", "admin"];
+    } else if (currentUser.role === "manager") {
+      return ["user"]; // Managers can only create users
+    }
+    return [];
+  };
+
+  const getMaxThreshold = () => {
+    if (!currentUser) return 0;
+    
+    if (currentUser.role === "admin") {
+      return 100; // Admin can set any threshold
+    } else if (currentUser.role === "manager") {
+      return currentUser.threshold; // Manager limited to their threshold
+    }
+    return 0;
+  };
+
+  const inputStyle = {
+    display: "block",
+    width: "100%",
+    margin: "10px 0",
+    padding: "12px",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    fontSize: "16px",
+    fontFamily: "inherit",
+    transition: "border-color 0.3s ease",
+    boxSizing: "border-box"
+  };
+
+  const labelStyle = {
+    display: "block",
+    marginBottom: "5px",
+    fontWeight: "600",
+    color: "#333"
+  };
+
+  if (!currentUser || !["admin", "manager"].includes(currentUser.role)) {
+    return (
+      <div style={{ 
+        maxWidth: "450px", 
+        margin: "50px auto", 
+        padding: "30px",
+        textAlign: "center",
+        position: "relative"
+      }}>
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/dashboard')}
+          style={{
+            position: "absolute",
+            top: "20px",
+            left: "20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "8px 12px",
+            backgroundColor: "#f8f9fa",
+            border: "1px solid #ddd",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: "500",
+            color: "#333",
+            transition: "all 0.2s ease",
+            fontFamily: "inherit"
+          }}
+          onMouseOver={(e) => {
+            e.target.style.backgroundColor = "#e9ecef";
+            e.target.style.borderColor = "#ccc";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.backgroundColor = "#f8f9fa";
+            e.target.style.borderColor = "#ddd";
+          }}
+        >
+          <span style={{ fontSize: "16px" }}>←</span>
+          Back
+        </button>
+        
+        <h2>Access Denied</h2>
+        <p>Only admins and managers can create new users.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="signup-container">
-      <style>{`
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-          background: #f7f9fc;
-        }
-        .signup-container {
-          max-width: 420px;
-          margin: 80px auto;
-          padding: 40px 30px;
-          border-radius: 12px;
-          background: #ffffff;
-          box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-          text-align: center;
-        }
-        h2 {
-          margin-bottom: 20px;
-          color: #1e293b;
-        }
-        .signup-input {
-          width: 100%;
-          padding: 12px 14px;
-          margin-bottom: 15px;
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          font-size: 14px;
-        }
-        .signup-select {
-          width: 100%;
-          padding: 12px 14px;
-          margin-bottom: 15px;
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          font-size: 14px;
-          background: #fff;
-        }
-        .signup-button {
-          width: 100%;
-          padding: 12px;
-          margin-top: 10px;
-          background: #2563eb;
-          color: #fff;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.2s ease-in-out;
-        }
-        .signup-button:hover { background: #1d4ed8; }
-        .message {
-          margin-top: 15px;
-          font-size: 14px;
-          font-weight: 500;
-        }
-      `}</style>
-
-      <h2>Create Account</h2>
-      <input
-        className="signup-input"
-        placeholder="First Name"
-        value={fname}
-        onChange={(e) => setFname(e.target.value)}
-      />
-      <input
-        className="signup-input"
-        placeholder="Last Name"
-        value={lname}
-        onChange={(e) => setLname(e.target.value)}
-      />
-      <input
-        className="signup-input"
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <input
-        type="password"
-        className="signup-input"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      <select
-        className="signup-select"
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
+    <div style={{ 
+      maxWidth: "450px", 
+      margin: "50px auto", 
+      padding: "30px",
+      backgroundColor: "white",
+      borderRadius: "12px",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      position: "relative"
+    }}>
+      {/* Back Button */}
+      <button
+        onClick={() => navigate('/dashboard')}
+        style={{
+          position: "absolute",
+          top: "20px",
+          left: "20px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "8px 12px",
+          backgroundColor: "#f8f9fa",
+          border: "1px solid #ddd",
+          borderRadius: "6px",
+          cursor: "pointer",
+          fontSize: "14px",
+          fontWeight: "500",
+          color: "#333",
+          transition: "all 0.2s ease",
+          fontFamily: "inherit"
+        }}
+        onMouseOver={(e) => {
+          e.target.style.backgroundColor = "#e9ecef";
+          e.target.style.borderColor = "#ccc";
+        }}
+        onMouseOut={(e) => {
+          e.target.style.backgroundColor = "#f8f9fa";
+          e.target.style.borderColor = "#ddd";
+        }}
       >
-        <option value="user">User</option>
-        <option value="manager">Manager</option>
-      </select>
+        <span style={{ fontSize: "16px" }}>←</span>
+        Back
+      </button>
+      
+      <h2 style={{ 
+        textAlign: "center", 
+        marginBottom: "30px", 
+        color: "#333",
+        fontSize: "28px",
+        fontWeight: "700"
+      }}>
+        Create New User
+      </h2>
 
-      {role === "manager" && (
+      {/* Current User Info */}
+      <div style={{
+        backgroundColor: "#f8f9fa",
+        padding: "12px",
+        borderRadius: "6px",
+        marginBottom: "20px",
+        border: "1px solid #e9ecef"
+      }}>
+        <small style={{ color: "#666" }}>
+          Logged in as: <strong>{currentUser.username}</strong> ({currentUser.role})
+          {currentUser.role === "manager" && ` - Max threshold: ${currentUser.threshold}%`}
+        </small>
+      </div>
+      
+      <div style={{ marginBottom: "20px" }}>
+        <label style={labelStyle}>First Name</label>
+        <input
+          type="text"
+          placeholder="Enter first name"
+          value={fname}
+          onChange={(e) => setFname(e.target.value)}
+          style={inputStyle}
+        />
+      </div>
+      
+      <div style={{ marginBottom: "20px" }}>
+        <label style={labelStyle}>Last Name</label>
+        <input
+          type="text"
+          placeholder="Enter last name"
+          value={lname}
+          onChange={(e) => setLname(e.target.value)}
+          style={inputStyle}
+        />
+      </div>
+      
+      <div style={{ marginBottom: "20px" }}>
+        <label style={labelStyle}>Username</label>
+        <input
+          type="text"
+          placeholder="Choose a username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          style={inputStyle}
+        />
+      </div>
+      
+      <div style={{ marginBottom: "20px" }}>
+        <label style={labelStyle}>Password</label>
+        <input
+          type="password"
+          placeholder="Create a password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={inputStyle}
+        />
+      </div>
+      
+      <div style={{ marginBottom: "20px" }}>
+        <label style={labelStyle}>Role</label>
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          style={{
+            ...inputStyle,
+            cursor: "pointer"
+          }}
+        >
+          {getAvailableRoles().map(roleOption => (
+            <option key={roleOption} value={roleOption}>
+              {roleOption.charAt(0).toUpperCase() + roleOption.slice(1)}
+            </option>
+          ))}
+        </select>
+      </div>
+      
+      <div style={{ marginBottom: "20px" }}>
+        <label style={labelStyle}>Discount Threshold (%)</label>
         <input
           type="number"
-          className="signup-input"
           min="0"
-          max="100"
+          max={getMaxThreshold()}
           value={threshold}
-          onChange={(e) => setThreshold(e.target.value)}
-          placeholder="Threshold % (0-100)"
+          onChange={(e) => setThreshold(parseFloat(e.target.value) || 0)}
+          style={inputStyle}
+          placeholder="0"
         />
-      )}
-
-      <button onClick={handleSignup} className="signup-button">
-        Signup
+        <small style={{ 
+          color: "#666", 
+          fontSize: "14px", 
+          display: "block", 
+          marginTop: "5px",
+          padding: "8px 12px",
+          backgroundColor: "#f8f9fa",
+          borderRadius: "4px",
+          border: "1px solid #e9ecef"
+        }}>
+          {currentUser.role === "manager" && 
+            `⚠️ You can assign up to ${currentUser.threshold}% threshold limit`
+          }
+          {currentUser.role === "admin" && 
+            "👑 As admin, you can assign any threshold limit"
+          }
+        </small>
+      </div>
+      
+      <button
+        onClick={handleSignup}
+        style={{
+          width: "100%",
+          padding: "14px",
+          backgroundColor: "#007bff",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+          fontSize: "16px",
+          fontWeight: "600",
+          transition: "background-color 0.3s ease"
+        }}
+        onMouseOver={(e) => e.target.style.backgroundColor = "#0056b3"}
+        onMouseOut={(e) => e.target.style.backgroundColor = "#007bff"}
+      >
+        Create {role.charAt(0).toUpperCase() + role.slice(1)}
       </button>
-      {message && <p className="message">{message}</p>}
+      
+      {message && (
+        <div style={{ 
+          marginTop: "20px", 
+          padding: "12px",
+          borderRadius: "6px",
+          textAlign: "center",
+          fontWeight: "500",
+          backgroundColor: message.includes("✅") ? "#d4edda" : "#f8d7da",
+          color: message.includes("✅") ? "#155724" : "#721c24",
+          border: message.includes("✅") ? "1px solid #c3e6cb" : "1px solid #f5c6cb"
+        }}>
+          {message}
+        </div>
+      )}
     </div>
   );
 }

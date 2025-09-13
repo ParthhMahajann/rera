@@ -17,26 +17,20 @@ import { createQuotation } from "../services/quotations";
 
 // Constants
 const DEVELOPER_TYPE_OPTIONS = [
-  { value: "cat1", label: "Category 1" },
-  { value: "cat2", label: "Category 2" },
-  { value: "cat3", label: "Category 3" },
+  { value: "category 1", label: "Category 1" },
+  { value: "category 2", label: "Category 2" },
+  { value: "category 3", label: "Category 3" },
   { value: "agent", label: "Agent Registration" },
 ];
 
 const REGION_GROUPS = [
   {
-    label: "Mumbai Metropolitan Region",
-    options: ["Mumbai Suburban", "Mumbai City", "Thane", "Palghar"],
-  },
-  { label: "Navi/KDMC/Raigad", options: ["KDMC", "Navi Mumbai", "Raigad"] },
-  {
-    label: "Pune & ROM",
-    options: [
-      "Pune - City",
-      "Pune - PCMC",
-      "Pune - PMRDA",
-      "Pune - Rural",
-      "ROM (Rest of Maharashtra)",
+    label: "Project Region",
+    options: ["Mumbai Suburban", "Mumbai City", "Thane", "Palghar","KDMC", "Navi Mumbai", "Raigad","Pune - 1",
+      "Pune 2",
+      "Pune 3",
+      "Pune 4",
+      "ROM (Rest of Maharashtra)"
     ],
   },
 ];
@@ -51,10 +45,9 @@ const INITIAL_FORM_STATE = {
   plotArea: "",
   developerName: "",
   projectName: "",
-  validity: "7 days",
-  paymentSchedule: "50%",
+  validity: "",
+  paymentSchedule: "",
   reraNumber: "",
-  serviceSummary: "",
 };
 
 export default function CreateQuotation() {
@@ -95,6 +88,8 @@ export default function CreateQuotation() {
       !!form.projectRegion &&
       form.developerName.trim().length > 0 &&
       plotAreaValid &&
+      !!form.validity &&
+      !!form.paymentSchedule &&
       reraValid,
     [form, plotAreaValid, reraValid]
   );
@@ -108,7 +103,6 @@ export default function CreateQuotation() {
         plotArea: Number(form.plotArea),
         projectName: form.projectName || null,
         reraNumber: form.reraNumber || null,
-        serviceSummary: form.serviceSummary || null,
         createdBy: form.developerName,
       });
 
@@ -168,8 +162,8 @@ export default function CreateQuotation() {
             </Typography>
 
             <Grid container spacing={2} mb={3}>
-              {/* Developer Type */}
-              <Grid item xs={12} md={12}>
+              {/* Row 1: Developer Type & Project Region */}
+              <Grid item xs={12} md={6}>
                 <TextField
                   select
                   fullWidth
@@ -177,6 +171,7 @@ export default function CreateQuotation() {
                   label="Developer Type"
                   value={form.developerType}
                   onChange={(e) => handleChange("developerType", e.target.value)}
+                  helperText={!form.developerType ? "Please select developer type" : ""}
                 >
                   {DEVELOPER_TYPE_OPTIONS.map((o) => (
                     <MenuItem key={o.value} value={o.value}>
@@ -191,8 +186,7 @@ export default function CreateQuotation() {
                 )}
               </Grid>
 
-              {/* Project Region */}
-              <Grid item xs={12} md={12}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   select
                   fullWidth
@@ -200,6 +194,7 @@ export default function CreateQuotation() {
                   label="Project Region"
                   value={form.projectRegion}
                   onChange={(e) => handleChange("projectRegion", e.target.value)}
+                  helperText={!form.projectRegion ? "Please select project region" : ""}
                 >
                   {REGION_GROUPS.map((g) => [
                     <ListSubheader key={`${g.label}-header`} sx={{ fontWeight: 600 }}>
@@ -214,7 +209,7 @@ export default function CreateQuotation() {
                 </TextField>
               </Grid>
 
-              {/* Project Location */}
+              {/* Row 2: Project Location & Developer Name */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -227,7 +222,6 @@ export default function CreateQuotation() {
                 />
               </Grid>
 
-              {/* Developer Name */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -239,7 +233,7 @@ export default function CreateQuotation() {
                 />
               </Grid>
 
-              {/* Project Name */}
+              {/* Row 3: Project Name & Plot Area */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -250,7 +244,6 @@ export default function CreateQuotation() {
                 />
               </Grid>
 
-              {/* Plot Area */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -269,27 +262,17 @@ export default function CreateQuotation() {
                   }
                 />
               </Grid>
-            </Grid>
 
-            {/* Quotation Settings */}
-            <Typography
-              variant="h6"
-              fontWeight="600"
-              color="#2c3e50"
-              gutterBottom
-              mb={2}
-            >
-              Quotation Settings
-            </Typography>
-
-            <Grid container spacing={2} mb={3}>
-              <Grid item xs={12} md={4}>
+              {/* Row 4: Quotation Validity & Advance Payment */}
+              <Grid item xs={12} md={6}>
                 <TextField
                   select
                   fullWidth
-                  label="Validity"
+                  required
+                  label="Quotation Validity"
                   value={form.validity}
                   onChange={(e) => handleChange("validity", e.target.value)}
+                  helperText={!form.validity ? "Please select validity period" : ""}
                 >
                   {VALIDITY_OPTIONS.map((v) => (
                     <MenuItem key={v} value={v}>
@@ -299,13 +282,15 @@ export default function CreateQuotation() {
                 </TextField>
               </Grid>
 
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   select
                   fullWidth
-                  label="Payment Schedule"
+                  required
+                  label="Advance Payment"
                   value={form.paymentSchedule}
                   onChange={(e) => handleChange("paymentSchedule", e.target.value)}
+                  helperText={!form.paymentSchedule ? "Please select payment percentage" : ""}
                 >
                   {PAYMENT_SCHEDULE_OPTIONS.map((v) => (
                     <MenuItem key={v} value={v}>
@@ -315,10 +300,11 @@ export default function CreateQuotation() {
                 </TextField>
               </Grid>
 
-              <Grid item xs={12} md={4}>
+              {/* Row 5: RERA Project Number (single field) */}
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="RERA Compliance Number (optional)"
+                  label="RERA Project Number (optional)"
                   value={form.reraNumber}
                   onChange={(e) =>
                     handleChange("reraNumber", e.target.value.toUpperCase())
@@ -332,16 +318,6 @@ export default function CreateQuotation() {
                 />
               </Grid>
             </Grid>
-
-            <TextField
-              fullWidth
-              multiline
-              minRows={3}
-              label="Service Summary (optional)"
-              value={form.serviceSummary}
-              onChange={(e) => handleChange("serviceSummary", e.target.value)}
-              sx={{ mb: 3 }}
-            />
 
             {/* Actions */}
             <Box display="flex" justifyContent="flex-end" gap={2}>

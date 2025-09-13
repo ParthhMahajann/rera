@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -16,7 +16,8 @@ import {
   Alert,
   Grid,
   Paper,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -38,38 +39,82 @@ const SummaryPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.grey[50],
 }));
 
-export default function QuotationSummary() {
+export default function AgentServiceSummary() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [backendData, setBackendData] = useState(null);
   
-  const { agentData, selectedServices, totalCost } = location.state || {
+  const { agentData, selectedServices, totalCost, quotationId } = location.state || {
     agentData: {},
     selectedServices: [],
-    totalCost: 0
+    totalCost: 0,
+    quotationId: null
   };
 
   // If no data, redirect back
-  if (!agentData.agentName || selectedServices.length === 0) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (!agentData.agentName || selectedServices.length === 0) {
+      navigate('/');
+      return;
+    }
+    
+    // Fetch updated data from backend
+    fetchBackendData();
+  }, []);
+
+  const fetchBackendData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !quotationId) return;
+
+      const response = await fetch(`http://localhost:3001/api/agent-registrations/${quotationId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setBackendData(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch backend data:', error);
+    }
+  };
 
   const handleConfirm = async () => {
+    setLoading(true);
     try {
-      // Here you would typically save the complete quotation
-      // await saveQuotation({
-      //   agentData,
-      //   selectedServices,
-      //   totalCost,
-      //   quotationDate: new Date().toISOString(),
-      //   status: 'pending'
-      // });
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please login to complete the registration');
+        return;
+      }
 
-      alert('Quotation created successfully! We will contact you shortly.');
-      navigate('/');
+      // ✅ Complete the agent registration by calling the complete endpoint
+      const response = await fetch(`http://localhost:3001/api/agent-registrations/${quotationId}/complete`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          termsAccepted: true
+        })
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        alert('Agent registration completed successfully! We will contact you shortly.');
+        navigate('/');
+      } else {
+        alert(`Failed to complete registration: ${result.error || 'Please try again.'}`);
+      }
+
     } catch (error) {
-      console.error('Failed to save quotation:', error);
-      alert('Failed to save quotation. Please try again.');
+      console.error('Failed to complete registration:', error);
+      alert('Failed to complete registration. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,57 +132,47 @@ export default function QuotationSummary() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Quotation Summary
+      <Typography variant="h4" gutterBottom align="center">
+        Agent Registration Summary
       </Typography>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={4}>
         <Grid item xs={12} md={8}>
           {/* Agent Details */}
           <StyledCard>
             <CardContent>
-              <Typography variant="h6" gutterBottom color="primary">
+              <Typography variant="h6" gutterBottom>
                 Agent Details
               </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Agent Name
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {agentData.agentName}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Agent Type
-                  </Typography>
-                  <Chip label={agentData.agentType} color="primary" variant="outlined" />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Mobile Number
-                  </Typography>
-                  <Typography variant="body1">
-                    {agentData.mobile}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    Email Address
-                  </Typography>
-                  <Typography variant="body1">
-                    {agentData.email || 'Not provided'}
-                  </Typography>
-                </Grid>
-              </Grid>
+              <Table>
+                <TableBody>
+                  <TableRow>
+                    <TableCell><strong>Agent Name</strong></TableCell>
+                    <TableCell>{agentData.agentName}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><strong>Agent Type</strong></TableCell>
+                    <TableCell>
+                      <Chip label={agentData.agentType} color="primary" size="small" />
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><strong>Mobile Number</strong></TableCell>
+                    <TableCell>{agentData.mobile}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell><strong>Email Address</strong></TableCell>
+                    <TableCell>{agentData.email || 'Not provided'}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </CardContent>
           </StyledCard>
 
           {/* Selected Services */}
           <StyledCard>
             <CardContent>
-              <Typography variant="h6" gutterBottom color="primary">
+              <Typography variant="h6" gutterBottom>
                 Selected Services
               </Typography>
               <Table>
@@ -151,16 +186,12 @@ export default function QuotationSummary() {
                   {selectedServices.map((service, index) => (
                     <TableRow key={index}>
                       <TableCell>{service.name}</TableCell>
-                      <TableCell align="right">
-                        {service.price.toLocaleString()}
-                      </TableCell>
+                      <TableCell align="right">{service.price.toLocaleString()}</TableCell>
                     </TableRow>
                   ))}
                   <TotalRow>
                     <TableCell><strong>Total Amount</strong></TableCell>
-                    <TableCell align="right">
-                      <strong>₹{totalCost.toLocaleString()}</strong>
-                    </TableCell>
+                    <TableCell align="right"><strong>₹{totalCost.toLocaleString()}</strong></TableCell>
                   </TotalRow>
                 </TableBody>
               </Table>
@@ -170,101 +201,99 @@ export default function QuotationSummary() {
 
         <Grid item xs={12} md={4}>
           {/* Summary Card */}
-          <SummaryPaper elevation={2}>
-            <Typography variant="h6" gutterBottom color="primary">
+          <SummaryPaper>
+            <Typography variant="h6" gutterBottom>
               Quotation Summary
             </Typography>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary">Date</Typography>
+              <Typography variant="body1">{getCurrentDate()}</Typography>
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary">Services Count</Typography>
+              <Typography variant="body1">{selectedServices.length} service(s)</Typography>
+            </Box>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary">Total Amount</Typography>
+              <Typography variant="h5" color="primary">₹{totalCost.toLocaleString()}</Typography>
+            </Box>
             
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Date
-              </Typography>
-              <Typography variant="body1">
-                {getCurrentDate()}
-              </Typography>
-            </Box>
-
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Services Count
-              </Typography>
-              <Typography variant="body1">
-                {selectedServices.length} service(s)
-              </Typography>
-            </Box>
-
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary">
-                Total Amount
-              </Typography>
-              <Typography variant="h5" color="primary" fontWeight="bold">
-                ₹{totalCost.toLocaleString()}
-              </Typography>
-            </Box>
-
-            <Divider sx={{ mb: 3 }} />
-
             <Alert severity="info" sx={{ mb: 3 }}>
               This quotation is valid for 30 days from the date of issue.
             </Alert>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Button
-                variant="contained"
-                size="large"
-                fullWidth
-                onClick={handleConfirm}
-              >
-                Confirm Quotation
-              </Button>
-              
-              <Button
-                variant="outlined"
-                size="large"
-                fullWidth
-                onClick={handlePrint}
-              >
-                Print/Save as PDF
-              </Button>
-              
-              <Button
-                variant="text"
-                size="large"
-                fullWidth
-                onClick={() => navigate(-1)}
-              >
-                Back to Services
-              </Button>
-            </Box>
+            <Button
+              variant="contained"
+              size="large"
+              fullWidth
+              onClick={handleConfirm}
+              disabled={loading}
+              sx={{ mb: 2 }}
+            >
+              {loading ? (
+                <>
+                  <CircularProgress size={20} sx={{ mr: 1 }} />
+                  Completing...
+                </>
+              ) : (
+                'Confirm Registration'
+              )}
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="large"
+              fullWidth
+              onClick={handlePrint}
+              sx={{ mb: 2 }}
+            >
+              Print/Save as PDF
+            </Button>
+
+            <Button
+              variant="text"
+              size="large"
+              fullWidth
+              onClick={() => navigate(-1)}
+            >
+              Back to Services
+            </Button>
           </SummaryPaper>
+
+          {/* Backend Data Display (for debugging) */}
+          {backendData && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="caption" color="text.secondary">
+                Quotation ID: {backendData.id}
+              </Typography>
+            </Box>
+          )}
         </Grid>
       </Grid>
 
       {/* Terms and Conditions */}
-      <Card sx={{ mt: 4 }}>
+      <StyledCard sx={{ mt: 4 }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom color="primary">
+          <Typography variant="h6" gutterBottom>
             Terms & Conditions
           </Typography>
-          <Box component="ul" sx={{ pl: 2 }}>
-            <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-              All prices are inclusive of applicable taxes unless specified otherwise.
-            </Typography>
-            <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-              Government fees are subject to change as per official notifications.
-            </Typography>
-            <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-              Service delivery timelines may vary based on government processing times.
-            </Typography>
-            <Typography component="li" variant="body2" sx={{ mb: 1 }}>
-              Additional charges may apply for expedited processing or additional documentation.
-            </Typography>
-            <Typography component="li" variant="body2">
-              This quotation is valid for 30 days from the date of issue.
-            </Typography>
-          </Box>
+          <Typography variant="body2" paragraph>
+            • All prices are inclusive of applicable taxes unless specified otherwise.
+          </Typography>
+          <Typography variant="body2" paragraph>
+            • Government fees are subject to change as per official notifications.
+          </Typography>
+          <Typography variant="body2" paragraph>
+            • Service delivery timelines may vary based on government processing times.
+          </Typography>
+          <Typography variant="body2" paragraph>
+            • Additional charges may apply for expedited processing or additional documentation.
+          </Typography>
+          <Typography variant="body2">
+            • This quotation is valid for 30 days from the date of issue.
+          </Typography>
         </CardContent>
-      </Card>
+      </StyledCard>
     </Container>
   );
 }
