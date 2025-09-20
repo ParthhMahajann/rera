@@ -1,169 +1,186 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page_title }}</title>
     <style>
         @page {
             size: A4;
-            margin: 20mm;
+            margin: 15mm;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #000;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #333;
             margin: 0;
             padding: 0;
+            background: white;
         }
 
-        /* Header Section - Logo on RIGHT, Title on LEFT */
+        /* Header - BLACK background, centered title, bigger logo */
         .page-header {
+            background: #000000;
+            color: white;
+            padding: 25px 0;
+            margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #000;
-            page-break-inside: avoid;
+            border-bottom: 4px solid #f4d03f;
+        }
+
+        .header-content {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .header-center {
+            flex: 2;
+            text-align: center;
         }
 
         .page-title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             margin: 0;
+            text-transform: uppercase;
             letter-spacing: 1px;
+            color: white;
         }
 
+        .header-right {
+            flex: 1;
+            text-align: right;
+        }
+
+        /* BIGGER Logo */
         .logo {
-            height: 50px;
+            height: 60px; /* Increased from 40px */
             width: auto;
         }
 
         .logo-fallback {
-            padding: 8px 12px;
-            background: #f0c040;
+            background: linear-gradient(45deg, #f4d03f, #f39c12);
             color: #000;
+            padding: 10px 18px; /* Increased padding */
+            border-radius: 6px;
             font-weight: bold;
-            border-radius: 3px;
-            font-size: 12px;
+            font-size: 16px; /* Increased from 12px */
+            display: inline-block;
         }
 
-        /* Service Section - Prevent page breaks */
-        .service-section {
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-            break-inside: avoid;
+        /* Simple Box-Type Service Containers */
+        .service-box {
+            border: 2px solid #000;
+            margin-bottom: 25px;
+            background: white;
+            /* REMOVED page-break-inside: avoid to allow splitting */
         }
 
-        .service-header {
+        .service-row {
             display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #000;
-            text-transform: uppercase;
+            min-height: 60px;
+        }
+
+        /* Service Details (Left Column - 75%) */
+        .service-details {
+            flex: 3;
+            padding: 20px;
+            border-right: 2px solid #000;
         }
 
         .service-name {
-            flex: 1;
-        }
-
-        .service-amount {
+            font-size: 14px;
             font-weight: bold;
-            margin-left: 10px;
-            white-space: nowrap;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            color: #000;
         }
 
-        /* Sub-services List */
-        .sub-services {
-            margin: 10px 0 0 0;
-            padding-left: 0;
+        .sub-services-list {
             list-style: none;
+            margin: 0;
+            padding: 0;
         }
 
-        .sub-services li {
-            margin-bottom: 6px;
+        .sub-services-list li {
+            margin-bottom: 8px;
             padding-left: 15px;
             position: relative;
-            line-height: 1.4;
-            font-size: 11px;
+            font-size: 10.5px;
+            line-height: 1.6;
+            color: #444;
+            text-align: justify;
         }
 
-        .sub-services li::before {
+        .sub-services-list li::before {
             content: "•";
             position: absolute;
             left: 0;
             font-weight: bold;
+            color: #f4d03f;
+        }
+
+        /* Included Services Box */
+        .included-section {
+            margin-top: 15px;
+            background: linear-gradient(135deg, #f4d03f, #f39c12);
             color: #000;
-        }
-
-        /* Package Total */
-        .package-total {
-            margin: 25px 0;
             padding: 12px;
-            background-color: #f0f8ff;
-            border: 2px solid #000;
-            text-align: right;
-            font-weight: bold;
-            font-size: 13px;
-            page-break-inside: avoid;
-        }
-
-        /* Grand Total Section */
-        .total-section {
-            border: 3px solid #000;
-            padding: 15px;
-            margin: 25px 0;
-            background-color: #f9f9f9;
             text-align: center;
-            page-break-inside: avoid;
+            font-weight: bold;
+            border-radius: 4px;
         }
 
-        .total-row {
+        /* Pricing Column (Right - 25%) */
+        .service-pricing {
+            flex: 1;
+            background: linear-gradient(135deg, #f4d03f, #f39c12);
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        /* Terms Section */
-        .terms {
-            margin-top: 25px;
-            page-break-inside: avoid;
-        }
-
-        .terms h3 {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .terms ul {
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        .terms li {
-            margin-bottom: 6px;
-            font-size: 11px;
-            line-height: 1.4;
-        }
-
-        /* Reference Number */
-        .ref-number {
+            padding: 20px 15px;
             text-align: center;
-            margin-top: 20px;
+        }
+
+        .amount-value {
+            font-size: 18px;
             font-weight: bold;
-            font-size: 12px;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
+            color: #000;
+            margin-bottom: 5px;
+        }
+
+        .amount-label {
+            font-size: 11px;
+            color: #000;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* Included pricing styling */
+        .included-pricing {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .included-pricing .amount-value,
+        .included-pricing .amount-label {
+            color: white;
         }
 
         /* Page Break */
@@ -171,248 +188,411 @@
             page-break-before: always;
         }
 
-        /* Display Mode */
-        .amount-hidden {
-            color: #999;
-            font-style: italic;
+        /* Terms & Conditions Page - Yellow/Black Theme */
+        .terms-page {
+            page-break-before: always;
         }
 
-        page-break-inside: avoid;
+        .terms-header {
+            background: #000000;
+            color: white;
+            padding: 25px 0;
+            margin: 0 -15mm 30px -15mm;
+            text-align: center;
+            border-bottom: 4px solid #f4d03f;
         }
 
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .total-label {
-            font-size: 16pt;
+        .terms-header h1 {
+            font-size: 24px;
             font-weight: bold;
-            color: #333;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .total-amount {
-            font-size: 18pt;
-            font-weight: bold;
-            color: #1976d2;
-        }
-
-        /* Terms Section */
-        .terms-section {
-            background-color: #fafafa;
-            border: 1px solid #e0e0e0;
-            padding: 15px;
-            margin: 20px 0;
-            page-break-inside: avoid;
-        }
-
-        .terms-title {
-            font-size: 14pt;
-            font-weight: bold;
-            color: #1976d2;
-            margin-bottom: 12px;
+        .terms-content {
+            background: white;
+            border: 2px solid #000;
+            padding: 30px;
+            margin-bottom: 30px;
         }
 
         .terms-list {
             list-style: none;
+            margin: 0;
             padding: 0;
+            counter-reset: terms-counter;
         }
 
         .terms-list li {
-            margin-bottom: 6px;
-            color: #555;
-            line-height: 1.4;
-            padding-left: 15px;
+            counter-increment: terms-counter;
             position: relative;
+            padding: 12px 0 12px 45px;
+            font-size: 11px;
+            line-height: 1.6;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .terms-list li:last-child {
+            border-bottom: none;
         }
 
         .terms-list li::before {
-            content: "•";
-            color: #1976d2;
-            font-weight: bold;
+            content: counter(terms-counter);
             position: absolute;
             left: 0;
+            top: 12px;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #f4d03f, #f39c12);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
         }
 
-        /* Footer Section */
-        .footer-section {
+        .project-name, .company-name {
+            font-weight: bold;
+            color: #000;
+        }
+
+        .contact-info {
+            background: linear-gradient(135deg, #f4d03f, #f39c12);
+            color: #000;
+            padding: 20px;
             text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
             margin: 20px 0;
-            padding-top: 15px;
-            border-top: 1px solid #e0e0e0;
-            page-break-inside: avoid;
         }
 
-        .reference-number {
-            font-size: 12pt;
-            color: #666;
+        .thanks-section {
+            text-align: right;
+            padding: 20px;
+            background: #f9f9f9;
+            border-left: 4px solid #f4d03f;
+            margin-top: 20px;
         }
 
-        /* Responsive adjustments */
-        @media print {
-            .display-mode-debug {
-                display: none;
-            }
-
-            .header-section {
-                margin-bottom: 15px;
-            }
-
-            .total-section {
-                margin: 20px 0;
-            }
-
-            .terms-section {
-                margin: 15px 0;
-            }
+        .thanks-text {
+            font-size: 12px;
+            color: #333;
         }
 
-        /* Page Break Helpers */
-        .page-break-before {
+        .company-signature {
+            font-weight: bold;
+            color: #000;
+            margin-top: 5px;
+        }
+
+        /* Disclaimer Page - Yellow/Black Theme */
+        .disclaimer-page {
             page-break-before: always;
         }
 
-        .page-break-after {
-            page-break-after: always;
-        }
-
-        .no-page-break {
-            page-break-inside: avoid;
-        }
-
-        /* Utility Classes */
-        .text-center {
+        .disclaimer-header {
+            background: #000000;
+            color: white;
+            padding: 25px 0;
+            margin: 0 -15mm 30px -15mm;
             text-align: center;
+            border-bottom: 4px solid #f4d03f;
         }
 
-        .text-right {
-            text-align: right;
+        .disclaimer-header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .font-bold {
+        .disclaimer-content {
+            background: white;
+            border: 2px solid #000;
+            padding: 30px;
+        }
+
+        .disclaimer-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .disclaimer-list li {
+            position: relative;
+            padding: 15px 0 15px 50px;
+            font-size: 10.5px;
+            line-height: 1.6;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .disclaimer-list li:last-child {
+            border-bottom: none;
+        }
+
+        .disclaimer-list li::before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+            top: 15px;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #f4d03f, #f39c12);
+            color: #000;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
             font-weight: bold;
         }
 
-        .color-primary {
-            color: #1976d2;
+        .disclaimer-section-title {
+            font-weight: bold;
+            color: #000;
         }
 
-        .color-secondary {
-            color: #666;
+        /* Contact Footer - Yellow/Black Theme */
+        .contact-footer {
+            background: #000000;
+            color: white;
+            padding: 25px 30px;
+            margin: 30px -15mm 0 -15mm;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            border-top: 4px solid #f4d03f;
+        }
+
+        .contact-item {
+            text-align: center;
+        }
+
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #f4d03f, #f39c12);
+            color: #000;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px auto;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .contact-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #f4d03f;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .contact-details {
+            font-size: 10px;
+            color: white;
+            line-height: 1.4;
+        }
+
+        /* Print Optimization */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+
+            .page-header {
+                background: #000000 !important;
+                border-bottom: 4px solid #f4d03f !important;
+            }
+
+            .service-pricing {
+                background: linear-gradient(135deg, #f4d03f, #f39c12) !important;
+            }
+
+            .included-pricing {
+                background: linear-gradient(135deg, #4CAF50, #45a049) !important;
+            }
+
+            .contact-footer {
+                background: #000000 !important;
+                border-top: 4px solid #f4d03f !important;
+            }
+
+            .terms-header, .disclaimer-header {
+                background: #000000 !important;
+                border-bottom: 4px solid #f4d03f !important;
+            }
+
+            .logo-fallback {
+                background: linear-gradient(45deg, #f4d03f, #f39c12) !important;
+            }
         }
     </style>
 </head>
-
 <body>
     {% for header in headers %}
-    {% if loop.index0 > 0 %}
-    <div class="page-break"></div>
-    {% endif %}
+        {% if loop.index0 > 0 %}
+            <div class="page-break"></div>
+        {% endif %}
 
-    <!-- Page Header - Title LEFT, Logo RIGHT -->
-    <div class="page-header">
-        <div class="logo-wrapper">
-            {% if logo_src %}
-            <img src="{{ logo_src }}" alt="RERA Easy Logo" class="logo">
-            {% else %}
-            <div class="logo-fallback">RERA<sup>Easy</sup></div>
-            {% endif %}
-        </div>
-        <h1 class="page-title">{{ header.name|upper if loop.index0 > 0 else page_title }}</h1>
-    </div>
-
-    <style>
-        .page-header {
-            position: relative;
-            padding: 10px 20px;
-        }
-
-        .logo-wrapper {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-        }
-
-        .logo,
-        .logo-fallback {
-            max-height: 50px;
-            object-fit: contain;
-        }
-
-        .page-title {
-            text-align: left;
-            margin: 60px 0 0 0;
-            /* pushes title below logo */
-        }
-    </style>
-
-
-    <!-- Service Sections with improved alignment -->
-    {% for service in header.services %}
-    <div class="service-section">
-        <div class="service-header">
-            <span class="service-name">{{ service.name|upper }}</span>
-            {% if display_mode != 'lumpsum' %}
-            {% if service.display_price is not none and service.display_price > 0 %}
-            <span class="service-amount">₹ {{ "{:,.0f}".format(service.display_price) }}*</span>
-            {% elif service.price > 0 %}
-            <span class="service-amount">₹ {{ "{:,.0f}".format(service.price) }}*</span>
-            {% endif %}
-            {% endif %}
+        <!-- BLACK Header with BIGGER Logo -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-left"></div>
+                <div class="header-center">
+                    <h1 class="page-title">{{ header.name }}</h1>
+                </div>
+                <div class="header-right">
+                    {% if logo_src %}
+                        <img src="{{ logo_src }}" alt="RERA Easy Logo" class="logo">
+                    {% else %}
+                        <div class="logo-fallback">RERA<sup>Easy</sup></div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
-        <!-- Ensure all sub-services render -->
-        {% if service.subServices %}
-        {% set sub_services_list = service.subServices if service.subServices is iterable else [] %}
-        {% if sub_services_list|length > 0 %}
-        <ul class="sub-services">
-            {% for sub_service in sub_services_list %}
-            {% if sub_service %}
-            {% if sub_service is mapping %}
-            <li>{{ sub_service.name if sub_service.name else sub_service|string }}</li>
-            {% else %}
-            <li>{{ sub_service|string }}</li>
-            {% endif %}
-            {% endif %}
-            {% endfor %}
-        </ul>
-        {% endif %}
-        {% endif %}
-    </div>
-    {% endfor %}
+        <!-- Simple Box-Type Service Containers -->
+        {% for service in header.services %}
+        <div class="service-box">
+            <div class="service-row">
+                <!-- Service Details (Left Column - 75%) -->
+                <div class="service-details">
+                    <div class="service-name">{{ service.name }}</div>
 
-    <!-- Package Total -->
-    {% if header.is_package and header.package_total > 0 %}
-    <div class="package-total">
-        {{ header.name }} Total: ₹ {{ "{:,.0f}".format(header.package_total) }}*
-    </div>
-    {% endif %}
+                    {% if service.subServices and service.subServices|length > 0 %}
+                    <ul class="sub-services-list">
+                        {% for sub_service in service.subServices %}
+                            {% if sub_service %}
+                                {% if sub_service is mapping %}
+                                <li>{{ sub_service.name if sub_service.name else sub_service|string }}</li>
+                                {% else %}
+                                <li>{{ sub_service|string }}</li>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <!-- Show "Included" section for services with no price -->
+                    {% if service.price == 0 or (service.display_price is not none and service.display_price == 0) %}
+                    <div class="included-section">
+                        Included in Scope
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Pricing Column (Right - 25%) -->
+                <div class="service-pricing {% if service.price == 0 or (service.display_price is not none and service.display_price == 0) %}included-pricing{% endif %}">
+                    {% if display_mode != 'lumpsum' %}
+                        {% if service.display_price is not none and service.display_price > 0 %}
+                            <div class="amount-value">₹{{ "{:,.0f}".format(service.display_price) }}/-</div>
+                            <div class="amount-label">Amount</div>
+                        {% elif service.price > 0 %}
+                            <div class="amount-value">₹{{ "{:,.0f}".format(service.price) }}/-</div>
+                            <div class="amount-label">Amount</div>
+                        {% else %}
+                            <div class="amount-value">Included</div>
+                            <div class="amount-label">in scope</div>
+                        {% endif %}
+                    {% else %}
+                        {% if header.is_package and header.package_total > 0 and loop.last %}
+                            <div class="amount-value">₹{{ "{:,.0f}".format(header.package_total) }}/-</div>
+                            <div class="amount-label">Package Total</div>
+                        {% else %}
+                            <div class="amount-value">Included</div>
+                            <div class="amount-label">in scope</div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
 
     {% endfor %}
 
-    <!-- Grand Total -->
-    <div class="total-section">
-        <div class="total-row">
-            <span>Total Payable Amount</span>
-            <span><strong>₹ {{ "{:,.0f}".format(total_amount) }}*</strong></span>
+    <!-- Terms & Conditions Page - Yellow/Black Theme -->
+    <div class="terms-page">
+        <div class="terms-header">
+            <h1>Terms & Conditions</h1>
+        </div>
+
+        <div class="terms-content">
+            <ol class="terms-list">
+                <li>The above quotation is subject to the project <span class="project-name">{{ quotation_data.projectName or 'GNP Galxy Phase - III' }}</span> being developed by <span class="company-name">{{ quotation_data.developerName or 'M/S Roshni Enterprises' }}</span>.</li>
+                <li>The prices mentioned above are applicable to One Project only for the duration of the services obtained.</li>
+                <li>The prices mentioned above DO NOT include Extension Government Fees.</li>
+                <li>The above quotation does not include SRO Membership fees (if applicable).</li>
+                <li>The Quotation is valid till <strong>{{ quotation_data.validityDate or '30th September 2025' }}</strong>. The Quotation may change thereafter.</li>
+            </ol>
+        </div>
+
+        <div class="contact-info">
+            In case of any queries, please feel free to reach out to us at <strong>+91 7678081406</strong> or email us at <strong>operations@reraeasy.com</strong>
+        </div>
+
+        <div class="thanks-section">
+            <div class="thanks-text">
+                Thanks & Regards,<br>
+                <div class="company-signature">RERA Easy</div>
+            </div>
         </div>
     </div>
 
-    <!-- Terms & Conditions -->
-    {% if terms %}
-    <div class="terms">
-        <h3>Terms & Conditions:</h3>
-        <ul>
-            {% for term in terms %}
-            <li>{{ term }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+    <!-- Disclaimer Page - Yellow/Black Theme -->
+    <div class="disclaimer-page">
+        <div class="disclaimer-header">
+            <h1>Disclaimer</h1>
+        </div>
 
-    <!-- Reference Number -->
-    <div class="ref-number">{{ ref_number }}</div>
+        <div class="disclaimer-content">
+            <ul class="disclaimer-list">
+                <li><span class="disclaimer-section-title">Limitation of Liability:</span> We shall not be liable for any direct, indirect, incidental, or damages arising out of or relating to the services provided.</li>
+
+                <li><span class="disclaimer-section-title">Confidentiality:</span> We will maintain the confidentiality of all sensitive information provided by the client, subject to any legal obligations.</li>
+
+                <li><span class="disclaimer-section-title">Intellectual Property Rights:</span> Any intellectual property developed during the course of providing services shall remain the property of the respective party unless otherwise agreed upon in writing.</li>
+
+                <li><span class="disclaimer-section-title">Force Majeure:</span> We shall not be liable for any delay or failure to perform our obligations under this agreement due to circumstances beyond our reasonable control, including but not limited to acts of God, natural disasters, strikes, or governmental actions.</li>
+
+                <li><span class="disclaimer-section-title">Client Responsibilities:</span> The client is responsible for providing accurate and complete information necessary for the provision of services.</li>
+
+                <li><span class="disclaimer-section-title">Scope Changes:</span> Any changes to the scope of services may result in adjustments to the project timeline and costs.</li>
+
+                <li><span class="disclaimer-section-title">Binding Agreement:</span> This proposal is provided solely for the purpose of outlining our scope of services and should not be construed as a definitive document or contract binding on both parties.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Contact Footer - Yellow/Black Theme -->
+    <div class="contact-footer">
+        <div class="contact-item">
+            <div class="contact-icon">📞</div>
+            <span class="contact-label">Phone</span>
+            <div class="contact-details">7678081406<br>7304838163</div>
+        </div>
+
+        <div class="contact-item">
+            <div class="contact-icon">✉️</div>
+            <span class="contact-label">Email</span>
+            <div class="contact-details">info@reraeasy.com</div>
+        </div>
+
+        <div class="contact-item">
+            <div class="contact-icon">📍</div>
+            <span class="contact-label">Address</span>
+            <div class="contact-details">809/810, The Landmark<br>Plot No 26A, Sector 7<br>Kharghar-410210</div>
+        </div>
+    </div>
 </body>
-
 </html>

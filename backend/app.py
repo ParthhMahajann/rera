@@ -517,38 +517,53 @@ def download_quotation_pdf(quotation_id):
                 'status': q.status
             }), 403
 
-        # **ENHANCED: Use saved display mode from database**
+        # Enhanced PDF generation with template options
         app.logger.info(f"Full request URL: {request.url}")
         app.logger.info(f"Request args: {dict(request.args)}")
-        
-        summary_param = request.args.get('summary', 'false')
-        # **NEW: Use saved display mode from quotation, not from URL parameter**
-        display_mode = q.display_mode or 'bifurcated'
-        
-        app.logger.info(f"Raw summary parameter: '{summary_param}'")
-        app.logger.info(f"Using saved display mode: '{display_mode}' from quotation {quotation_id}")
-        
-        use_summary = summary_param.lower() == 'true'
-        app.logger.info(f"use_summary evaluated to: {use_summary}")
 
-        if use_summary:
+        summary_param = request.args.get('summary', 'false')
+        multipage_param = request.args.get('multipage', 'false')  # NEW: Support multi-page
+
+        # Use saved display mode from quotation
+        display_mode = q.display_mode or 'bifurcated'
+
+        app.logger.info(f"Raw summary parameter: '{summary_param}'")
+        app.logger.info(f"Raw multipage parameter: '{multipage_param}'")
+        app.logger.info(f"Using saved display mode: '{display_mode}' from quotation {quotation_id}")
+
+        use_summary = summary_param.lower() == 'true'
+        use_multipage = multipage_param.lower() == 'true'
+
+        app.logger.info(f"use_summary: {use_summary}, use_multipage: {use_multipage}")
+
+        # Initialize PDF generator based on template preference
+        if use_multipage:
+            pdf_generator = QuotationPDFGenerator(use_multipage_template=True)
+            app.logger.info("Using multi-page template")
+        elif use_summary:
             pdf_generator = QuotationPDFGenerator(use_summary_template=True)
+            app.logger.info("Using summary template")
         else:
             pdf_generator = QuotationPDFGenerator()
+            app.logger.info("Using standard template")
 
         filename = f"Quotation_{quotation_id}.pdf"
         pdf_dir = 'temp_pdfs'
         filepath = os.path.join(pdf_dir, filename)
         os.makedirs(pdf_dir, exist_ok=True)
 
-        app.logger.info(f"Generating PDF at: {filepath} (summary={use_summary}, displayMode={display_mode})")
+        app.logger.info(f"Generating PDF at: {filepath}")
         app.logger.info(f"PDF generator template: {pdf_generator.template_name}")
 
-        # **ENHANCED: Pass display mode to PDF generation**
+        # Pass display mode to PDF generation
         quotation_dict = q.to_dict()
-        quotation_dict['displayMode'] = display_mode  # Add display mode to data
+        quotation_dict['displayMode'] = display_mode
 
-        if use_summary:
+        # Generate PDF based on template type
+        if use_multipage:
+            app.logger.info("Using generate_multipage_pdf method")
+            pdf_generator.generate_multipage_pdf(quotation_dict, filepath)
+        elif use_summary:
             app.logger.info("Using generate_summary_pdf method")
             pdf_generator.generate_summary_pdf(quotation_dict, filepath)
         else:

@@ -1,9 +1,10 @@
-// src/components/QuotationBuilder.jsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  getAvailableHeaders, 
-  getServicesForHeader, 
-  expandPackageServices, 
+// Enhanced QuotationBuilder.jsx with improved MUI styling and smooth year selection
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  getAvailableHeaders,
+  getServicesForHeader,
+  expandPackageServices,
   isPackageHeader,
   YEAR_OPTIONS,
   QUARTER_OPTIONS,
@@ -29,17 +30,43 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Collapse,
+  Fade,
+  Slide,
+  useTheme,
+  alpha,
+  IconButton,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  ListItemIcon,
+  Avatar,
+  Badge
 } from "@mui/material";
 import {
   Add as AddIcon,
   Schedule as ScheduleIcon,
-  DateRange as DateRangeIcon
+  DateRange as DateRangeIcon,
+  CheckCircle,
+  RadioButtonUnchecked,
+  ExpandMore,
+  Close,
+  Done,
+  Warning,
+  Settings,
+  Business,
+  Extension
 } from "@mui/icons-material";
 
 export default function QuotationBuilder({ onComplete, onServicesChange, quotationData }) {
   // Use context for header and services data
   const { selectedHeaders: contextHeaders } = useQuotation();
+  const theme = useTheme();
   
   // Local state for UI-specific data
   const [selectedHeaders, setSelectedHeaders] = useState([]);
@@ -59,6 +86,9 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
   const [requiresApproval, setRequiresApproval] = useState(false);
   const [originalPackageSelections, setOriginalPackageSelections] = useState({});
   const [dataLoaded, setDataLoaded] = useState(false);
+  
+  // Refs to maintain scroll positions
+  const yearSectionRefs = useRef({});
 
   // Helper function to get default services for a header (what should be pre-selected)
   const getDefaultServicesForHeader = useCallback((headerName) => {
@@ -154,10 +184,10 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
     const totalSelectedSubServices = Object.values(selectedSubServices).flat().length;
     const totalSelected = totalSelectedServices + totalSelectedSubServices;
     
-    const completionPercentage = selectedHeaders.length > 0 
+    const completionPercentage = selectedHeaders.length > 0
       ? Math.min(100, Math.round((totalSelected / Math.max(selectedHeaders.length * 5, 1)) * 100))
       : 0;
-
+    
     if (onServicesChange) {
       onServicesChange(totalSelected, completionPercentage);
     }
@@ -189,11 +219,12 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
           // Determine the header key to use
           const headerKey = header.originalName || header.name;
           
-          // Get full service information from servicesData to merge with context data  
+          // Get full service information from servicesData to merge with context data
           // For custom headers, use 'Customized Header' as the service lookup key
-          const serviceLookupKey = (header.originalName && header.originalName.startsWith('custom-')) 
-            ? 'Customized Header' 
+          const serviceLookupKey = (header.originalName && header.originalName.startsWith('custom-'))
+            ? 'Customized Header'
             : header.name;
+            
           const fullHeaderServices = getServicesForHeader(serviceLookupKey);
           
           servicesMap[headerKey] = header.services.map(contextService => {
@@ -249,7 +280,7 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
     setRequiresApproval(checkIfRequiresApproval());
   }, [updateProgress, getGloballySelectedAddonIds, checkIfRequiresApproval]);
 
-  // Service Card with clean professional styling
+  // Enhanced Service Card with smooth animations and better styling
   const ServiceCard = ({ service, isSelected, onToggle, headerName }) => {
     const requiresYearQuarter = service.requiresYearQuarter;
     const requiresYearOnly = service.requiresYearOnly;
@@ -257,333 +288,374 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
     const serviceKey = `${headerName}-${service.id}`;
     
     // Check if this addon service is already selected in another header
-    const isAddonSelectedElsewhere = service.category === 'addon' && 
+    const isAddonSelectedElsewhere = service.category === 'addon' &&
       globallySelectedAddons.has(service.id) && !isSelected;
-    
     const isDisabled = isAddonSelectedElsewhere;
 
-
     return (
-      <Card sx={{
-        mb: 2,
-        border: '1px solid',
-        borderColor: isSelected ? '#1976d2' : isDisabled ? '#d1d5db' : '#e2e8f0',
-        backgroundColor: isSelected ? '#f3f4f6' : isDisabled ? '#f9fafb' : 'white',
-        opacity: isDisabled ? 0.6 : 1,
-        cursor: isDisabled ? 'not-allowed' : 'pointer',
-        '&:hover': {
-          borderColor: isDisabled ? '#d1d5db' : '#1976d2',
-          backgroundColor: isDisabled ? '#f9fafb' : '#f8f9fa'
-        }
-      }}>
-        <CardContent sx={{ p: 2 }}>
-          <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-            <Box flex={1} mr={2}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={isSelected}
-                    onChange={isDisabled ? undefined : onToggle}
-                    disabled={isDisabled}
-                    color="primary"
-                  />
-                }
-                label={
-                  <Box display="flex" alignItems="center">
-                    <Typography 
-                      variant="subtitle1" 
-                      fontWeight={600}
-                      color={isDisabled ? 'text.disabled' : 'text.primary'}
-                    >
-                      {service.name}
-                      {isAddonSelectedElsewhere && (
-                        <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                          (Selected in another category)
-                        </Typography>
-                      )}
-                    </Typography>
-                    {requiresYearSelection && (
-                      <Tooltip title={requiresYearOnly ? "This service requires year selection" : "This service requires year and quarter selection"}>
-                        <ScheduleIcon sx={{ ml: 1, fontSize: 16, color: 'orange' }} />
-                      </Tooltip>
-                    )}
-                  </Box>
-                }
-                sx={{ alignItems: 'flex-start', mr: 0 }}
+      <Fade in={true} timeout={300}>
+        <Card
+          sx={{
+            mb: 2,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            border: `2px solid ${
+              isSelected 
+                ? theme.palette.primary.main
+                : isDisabled 
+                  ? alpha(theme.palette.error.main, 0.3)
+                  : alpha(theme.palette.divider, 0.3)
+            }`,
+            backgroundColor: isSelected 
+              ? alpha(theme.palette.primary.main, 0.05)
+              : isDisabled
+                ? alpha(theme.palette.error.main, 0.02)
+                : theme.palette.background.paper,
+            cursor: isDisabled ? 'not-allowed' : 'pointer',
+            '&:hover': {
+              transform: isDisabled ? 'none' : 'translateY(-2px)',
+              boxShadow: isDisabled ? 'none' : theme.shadows[8],
+              borderColor: isDisabled 
+                ? alpha(theme.palette.error.main, 0.3)
+                : isSelected 
+                  ? theme.palette.primary.dark
+                  : alpha(theme.palette.primary.main, 0.6)
+            },
+            opacity: isDisabled ? 0.6 : 1,
+            borderRadius: 3
+          }}
+        >
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+              <Checkbox
+                checked={isSelected}
+                onChange={onToggle}
+                disabled={isDisabled}
+                icon={<RadioButtonUnchecked />}
+                checkedIcon={<CheckCircle />}
+                sx={{ 
+                  p: 0, 
+                  mr: 2,
+                  color: theme.palette.primary.main,
+                  '&.Mui-checked': {
+                    color: theme.palette.primary.main,
+                  }
+                }}
               />
+              <Box sx={{ flex: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 600,
+                      color: isSelected ? theme.palette.primary.main : theme.palette.text.primary,
+                      fontSize: '1.1rem'
+                    }}
+                  >
+                    {service.name}
+                  </Typography>
+                  {service.category === 'addon' && (
+                    <Chip
+                      label="Add-on"
+                      size="small"
+                      sx={{
+                        backgroundColor: alpha(theme.palette.secondary.main, 0.1),
+                        color: theme.palette.secondary.main,
+                        fontWeight: 500
+                      }}
+                    />
+                  )}
+                </Box>
 
-              {service.origin && (
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mb: 1 }}>
-                  Origin: {service.origin}
-                </Typography>
-              )}
-              
-              {/* Show hint for services with sub-services when not selected */}
-              {!isSelected && service.subServices && service.subServices.length > 0 && (
-                <Typography variant="caption" color="text.secondary" sx={{ ml: 4, fontStyle: 'italic' }}>
-                  Contains {service.subServices.length} sub-service{service.subServices.length !== 1 ? 's' : ''} - Select service to configure
-                </Typography>
-              )}
+                {isAddonSelectedElsewhere && (
+                  <Chip
+                    label="(Selected in another category)"
+                    size="small"
+                    color="error"
+                    variant="outlined"
+                    sx={{ mb: 1 }}
+                  />
+                )}
 
-              {/* Only show sub-services when the main service is selected */}
+                {requiresYearSelection && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <DateRangeIcon sx={{ fontSize: 16, color: theme.palette.info.main }} />
+                    <Typography variant="caption" color="info.main" sx={{ fontWeight: 500 }}>
+                      Requires {requiresYearOnly ? 'year' : 'year and quarter'} selection
+                    </Typography>
+                  </Box>
+                )}
+
+                {service.origin && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Origin: {service.origin}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+
+            {/* Show hint for services with sub-services when not selected */}
+            {!isSelected && service.subServices && service.subServices.length > 0 && (
+              <Alert severity="info" sx={{ mb: 2, py: 1 }}>
+                Contains {service.subServices.length} sub-service{service.subServices.length !== 1 ? 's' : ''} - Select service to configure
+              </Alert>
+            )}
+
+            {/* Only show sub-services when the main service is selected */}
+            <Collapse in={isSelected && service.subServices && service.subServices.length > 0}>
               {isSelected && service.subServices && service.subServices.length > 0 && (
-                <Box sx={{ ml: 4, mt: 2 }}>
-                  <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ mb: 2 }}>
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: theme.palette.primary.main }}>
                     Sub-Services ({service.subServices.length}):
                   </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: 300, overflow: 'auto' }}>
+                  <Grid container spacing={1}>
                     {service.subServices.map((subService) => {
                       const serviceKey = `${headerName}-${service.id}`;
                       const selectedSubs = selectedSubServices[serviceKey] || [];
                       const isSubSelected = selectedSubs.includes(subService.id);
-                      
+
                       return (
-                        <FormControlLabel
-                          key={subService.id}
-                          control={
-                            <Checkbox
-                              size="small"
-                              checked={isSubSelected}
-                              onChange={() => toggleSubService(headerName, service.id, subService.id)}
-                              disabled={isDisabled}
-                              color="primary"
-                            />
-                          }
-                          label={
-                            <Typography 
-                              variant="caption" 
-                              color={isDisabled ? 'text.disabled' : 'text.secondary'}
-                              sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}
-                            >
-                              {subService.name}
-                            </Typography>
-                          }
-                          sx={{ 
-                            alignItems: 'flex-start', 
-                            mr: 0,
-                            '& .MuiFormControlLabel-label': { 
-                              mt: 0.25 
+                        <Grid item xs={12} sm={6} key={subService.id}>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={isSubSelected}
+                                onChange={() => toggleSubService(headerName, service.id, subService.id)}
+                                disabled={isDisabled}
+                                color="primary"
+                                size="small"
+                              />
                             }
-                          }}
-                        />
+                            label={
+                              <Typography variant="body2" sx={{ fontSize: '0.9rem' }}>
+                                {subService.name}
+                              </Typography>
+                            }
+                            sx={{
+                              alignItems: 'flex-start',
+                              mr: 0,
+                              '& .MuiFormControlLabel-label': {
+                                mt: 0.25
+                              }
+                            }}
+                          />
+                        </Grid>
                       );
                     })}
-                  </Box>
+                  </Grid>
                 </Box>
               )}
+            </Collapse>
 
-              {/* Year and Quarter Selection for specific services */}
+            {/* Enhanced Year and Quarter Selection */}
+            <Collapse in={isSelected && requiresYearSelection}>
               {isSelected && requiresYearSelection && (
-                <Box sx={{ 
-                  ml: 4, 
-                  mt: 2, 
-                  p: 2, 
-                  backgroundColor: '#f8fafc',
-                  borderRadius: 1,
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <DateRangeIcon sx={{ 
-                      fontSize: 16, 
-                      mr: 1, 
-                      color: '#1976d2'
-                    }} />
-                  <Typography 
-                    variant="body2" 
-                    fontWeight={600} 
-                    color="text.primary"
-                  >
+                <Box sx={{ mt: 3 }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600, color: theme.palette.primary.main }}>
                     {requiresYearOnly ? 'Select Years' : 'Select Years and Quarters'}
                   </Typography>
-                  </Box>
-
-                  <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    gap: 1,
-                    maxHeight: 250,
-                    overflowY: 'auto'
-                  }}>
-                    {YEAR_OPTIONS.map((year) => {
+                  
+                  <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+                    {YEAR_OPTIONS.map((year, yearIndex) => {
                       const isYearSelected = (selectedYears[serviceKey] || []).includes(year.value);
                       const yearQuarters = QUARTER_OPTIONS[year.value] || [];
                       const selectedQuartersForYear = (selectedQuarters[serviceKey] || []).filter(q => q.startsWith(year.value + '-')).length;
                       
+                      // Create ref for this year section
+                      if (!yearSectionRefs.current[serviceKey]) {
+                        yearSectionRefs.current[serviceKey] = {};
+                      }
+                      if (!yearSectionRefs.current[serviceKey][year.value]) {
+                        yearSectionRefs.current[serviceKey][year.value] = React.createRef();
+                      }
+
                       return (
-                        <Box key={year.value}>
-                          {/* Compact Year Selection */}
-                          <Box
+                        <Box
+                          key={year.value}
+                          ref={yearSectionRefs.current[serviceKey][year.value]}
+                          sx={{ mb: 2 }}
+                        >
+                          {/* Year Selection with better styling */}
+                          <Card
+                            variant="outlined"
                             sx={{
-                              p: 1,
-                              backgroundColor: isYearSelected ? '#e3f2fd' : 'white',
-                              borderRadius: 1,
-                              border: '1px solid #e0e0e0',
                               cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              border: `1px solid ${isYearSelected ? theme.palette.primary.main : theme.palette.divider}`,
+                              backgroundColor: isYearSelected 
+                                ? alpha(theme.palette.primary.main, 0.05)
+                                : 'transparent',
                               '&:hover': {
-                                backgroundColor: '#f5f5f5'
+                                borderColor: theme.palette.primary.main,
+                                backgroundColor: alpha(theme.palette.primary.main, 0.03)
                               }
                             }}
                             onClick={(e) => {
                               if (e.target.type !== 'checkbox') {
                                 const checkbox = e.currentTarget.querySelector('input[type="checkbox"]');
-                                if (checkbox) checkbox.click();
+                                if (checkbox) {
+                                  checkbox.click();
+                                  // Scroll to maintain position after state update
+                                  setTimeout(() => {
+                                    const ref = yearSectionRefs.current[serviceKey]?.[year.value];
+                                    if (ref?.current) {
+                                      ref.current.scrollIntoView({ 
+                                        behavior: 'smooth', 
+                                        block: 'nearest',
+                                        inline: 'nearest'
+                                      });
+                                    }
+                                  }, 100);
+                                }
                               }
                             }}
                           >
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    size="small"
-                                    checked={isYearSelected}
-                                    onChange={(e) => {
-                                      e.stopPropagation();
-                                      const currentYears = selectedYears[serviceKey] || [];
-                                      const currentQuarters = selectedQuarters[serviceKey] || [];
-                                      let newYears;
-                                      let newQuarters = [...currentQuarters];
-                                      
-                                      if (e.target.checked) {
-                                        // Add year
-                                        newYears = [...currentYears, year.value];
-                                        // Auto-select quarters only if not year-only service
-                                        if (!requiresYearOnly) {
-                                          const yearQuarterValues = yearQuarters.map(q => q.value);
-                                          newQuarters = [...currentQuarters, ...yearQuarterValues];
-                                        }
-                                      } else {
-                                        // Remove year and its quarters
-                                        newYears = currentYears.filter(y => y !== year.value);
-                                        newQuarters = currentQuarters.filter(q => !q.startsWith(year.value + '-'));
-                                      }
-                                      
-                                      setSelectedYears(prev => ({
-                                        ...prev,
-                                        [serviceKey]: newYears
-                                      }));
-                                      
-                                      setSelectedQuarters(prev => ({
-                                        ...prev,
-                                        [serviceKey]: newQuarters
-                                      }));
-                                    }}
-                                    color="primary"
-                                  />
-                                }
-                                label={
-                                  <Typography 
-                                    variant="body2" 
-                                    fontWeight={500}
-                                  >
-                                    {year.label}
-                                  </Typography>
-                                }
-                                sx={{ m: 0 }}
-                              />
-                              {isYearSelected && selectedQuartersForYear > 0 && (
-                                <Chip 
-                                  label={`${selectedQuartersForYear}Q`}
-                                  size="small"
-                                  color="primary"
-                                  variant="outlined"
-                                  sx={{
-                                    fontSize: '0.7rem',
-                                    height: 20,
-                                    minWidth: 32
-                                  }}
-                                />
-                              )}
-                            </Box>
-                          </Box>
-                          
-                          {/* Compact Quarter Selection - only show if year is selected and quarters are needed */}
-                          {isYearSelected && yearQuarters.length > 0 && !requiresYearOnly && (
-                            <Box sx={{ 
-                              ml: 2, 
-                              mt: 0.5,
-                              p: 1,
-                              backgroundColor: 'white',
-                              borderRadius: 1,
-                              border: '1px solid #e8f4fd'
-                            }}>
-                              <Typography 
-                                variant="caption" 
-                                color="text.secondary" 
-                                sx={{ mb: 0.5, display: 'block', fontSize: '0.7rem' }}
-                              >
-                                Quarters:
-                              </Typography>
-                              <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                                {yearQuarters.map((quarter) => {
-                                  const isQuarterSelected = (selectedQuarters[serviceKey] || []).includes(quarter.value);
-                                  return (
-                                    <Chip
-                                      key={quarter.value}
-                                      label={quarter.quarter}
-                                      size="small"
-                                      clickable
-                                      color={isQuarterSelected ? 'primary' : 'default'}
-                                      variant={isQuarterSelected ? 'filled' : 'outlined'}
-                                      onClick={() => {
+                            <CardContent sx={{ py: 2 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <FormControlLabel
+                                  control={
+                                    <Checkbox
+                                      checked={isYearSelected}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        const currentYears = selectedYears[serviceKey] || [];
                                         const currentQuarters = selectedQuarters[serviceKey] || [];
-                                        let newQuarters;
-                                        
-                                        if (isQuarterSelected) {
-                                          newQuarters = currentQuarters.filter(q => q !== quarter.value);
+                                        let newYears;
+                                        let newQuarters = [...currentQuarters];
+
+                                        if (e.target.checked) {
+                                          // Add year
+                                          newYears = [...currentYears, year.value];
+                                          // Auto-select quarters only if not year-only service
+                                          if (!requiresYearOnly) {
+                                            const yearQuarterValues = yearQuarters.map(q => q.value);
+                                            newQuarters = [...currentQuarters, ...yearQuarterValues];
+                                          }
                                         } else {
-                                          newQuarters = [...currentQuarters, quarter.value];
+                                          // Remove year and its quarters
+                                          newYears = currentYears.filter(y => y !== year.value);
+                                          newQuarters = currentQuarters.filter(q => !q.startsWith(year.value + '-'));
                                         }
-                                        
+
+                                        setSelectedYears(prev => ({
+                                          ...prev,
+                                          [serviceKey]: newYears
+                                        }));
                                         setSelectedQuarters(prev => ({
                                           ...prev,
                                           [serviceKey]: newQuarters
                                         }));
+                                        
+                                        // Maintain scroll position
+                                        setTimeout(() => {
+                                          const ref = yearSectionRefs.current[serviceKey]?.[year.value];
+                                          if (ref?.current) {
+                                            ref.current.scrollIntoView({ 
+                                              behavior: 'smooth', 
+                                              block: 'nearest',
+                                              inline: 'nearest'
+                                            });
+                                          }
+                                        }, 50);
                                       }}
-                                      sx={{
-                                        fontSize: '0.7rem',
-                                        height: 24,
-                                        minWidth: 32,
-                                        '& .MuiChip-label': {
-                                          px: 1
-                                        }
-                                      }}
+                                      color="primary"
                                     />
-                                  );
-                                })}
+                                  }
+                                  label={
+                                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                      {year.label}
+                                    </Typography>
+                                  }
+                                  sx={{ m: 0 }}
+                                />
+                                
+                                {isYearSelected && selectedQuartersForYear > 0 && (
+                                  <Badge 
+                                    badgeContent={selectedQuartersForYear}
+                                    color="primary"
+                                    sx={{
+                                      '& .MuiBadge-badge': {
+                                        fontSize: '0.7rem',
+                                        height: 18,
+                                        minWidth: 18
+                                      }
+                                    }}
+                                  >
+                                    <Chip 
+                                      label="Quarters"
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                  </Badge>
+                                )}
                               </Box>
-                            </Box>
-                          )}
+                            </CardContent>
+                          </Card>
+
+                          {/* Enhanced Quarter Selection */}
+                          <Collapse in={isYearSelected && yearQuarters.length > 0 && !requiresYearOnly}>
+                            {isYearSelected && yearQuarters.length > 0 && !requiresYearOnly && (
+                              <Box sx={{ mt: 1, pl: 3 }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                                  Quarters:
+                                </Typography>
+                                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                  {yearQuarters.map((quarter) => {
+                                    const isQuarterSelected = (selectedQuarters[serviceKey] || []).includes(quarter.value);
+                                    
+                                    return (
+                                      <Chip
+                                        key={quarter.value}
+                                        label={quarter.label}
+                                        clickable
+                                        variant={isQuarterSelected ? "filled" : "outlined"}
+                                        color={isQuarterSelected ? "primary" : "default"}
+                                        onClick={() => {
+                                          const currentQuarters = selectedQuarters[serviceKey] || [];
+                                          let newQuarters;
+                                          if (isQuarterSelected) {
+                                            newQuarters = currentQuarters.filter(q => q !== quarter.value);
+                                          } else {
+                                            newQuarters = [...currentQuarters, quarter.value];
+                                          }
+
+                                          setSelectedQuarters(prev => ({
+                                            ...prev,
+                                            [serviceKey]: newQuarters
+                                          }));
+                                        }}
+                                        sx={{
+                                          fontSize: '0.75rem',
+                                          height: 28,
+                                          transition: 'all 0.2s',
+                                          '&:hover': {
+                                            transform: 'scale(1.05)'
+                                          }
+                                        }}
+                                      />
+                                    );
+                                  })}
+                                </Stack>
+                              </Box>
+                            )}
+                          </Collapse>
                         </Box>
                       );
                     })}
                   </Box>
 
                   {(selectedYears[serviceKey]?.length > 0 || selectedQuarters[serviceKey]?.length > 0) && (
-                    <Alert 
-                      severity="info" 
-                      sx={{ 
-                        mt: 1.5,
-                        py: 0.5
-                      }}
-                    >
-                      <Typography variant="caption">
+                    <Alert severity="success" sx={{ mt: 2 }}>
+                      <Typography variant="body2">
                         Selected: {selectedYears[serviceKey]?.length || 0} year(s), {selectedQuarters[serviceKey]?.length || 0} quarter(s)
                       </Typography>
                     </Alert>
                   )}
                 </Box>
               )}
-            </Box>
-
-            <Chip
-              label={service.category === 'addon' ? 'Add-on' : 'Core'}
-              size="small"
-              variant={service.category === 'addon' ? 'outlined' : 'filled'}
-              color={service.category === 'addon' ? 'warning' : 'primary'}
-            />
-          </Box>
-        </CardContent>
-      </Card>
+            </Collapse>
+          </CardContent>
+        </Card>
+      </Fade>
     );
   };
 
@@ -595,7 +667,7 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
     }
     
     if (selectedHeaders.includes(headerName)) return;
-
+    
     const newHeaders = [...selectedHeaders, headerName];
     setSelectedHeaders(newHeaders);
     
@@ -620,9 +692,9 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
       });
     }
     
-    setSelectedServices({ 
-      ...selectedServices, 
-      [headerName]: mainServicesToSelect 
+    setSelectedServices({
+      ...selectedServices,
+      [headerName]: mainServicesToSelect
     });
     setCurrentHeader(headerName);
   };
@@ -644,11 +716,10 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
     }));
     
     // Initialize services for custom header (empty by default)
-    setSelectedServices({ 
-      ...selectedServices, 
-      [customHeaderId]: [] 
+    setSelectedServices({
+      ...selectedServices,
+      [customHeaderId]: []
     });
-    
     setCurrentHeader(customHeaderId);
     setShowCustomHeaderDialog(false);
     setPendingCustomHeader("");
@@ -709,7 +780,7 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
     setSelectedHeaders(newHeaders);
     setSelectedServices(newServices);
     setSelectedSubServices(newSubServices);
-
+    
     if (currentHeader === headerName) {
       setCurrentHeader(newHeaders.length > 0 ? newHeaders[0] : null);
     }
@@ -720,17 +791,16 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
     if (service.category === 'addon' && globallySelectedAddons.has(service.id)) {
       const headerServices = selectedServices[headerName] || [];
       const isSelectedHere = headerServices.some(s => s.id === service.id);
-      
       // Only allow deselection if it's selected in this header
       if (!isSelectedHere) {
         return; // Prevent selection
       }
     }
-
+    
     const headerServices = selectedServices[headerName] || [];
     const isSelected = headerServices.some(s => s.id === service.id);
-
     let newServices;
+    
     if (isSelected) {
       newServices = headerServices.filter(s => s.id !== service.id);
       // Clear year/quarter selections when service is deselected
@@ -752,7 +822,7 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
       // Auto-select all sub-services when parent service is selected
       toggleAllSubServices(headerName, service.id, true);
     }
-
+    
     setSelectedServices({
       ...selectedServices,
       [headerName]: newServices
@@ -763,8 +833,8 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
   const toggleSubService = (headerName, serviceId, subServiceId) => {
     const serviceKey = `${headerName}-${serviceId}`;
     const currentSubServices = selectedSubServices[serviceKey] || [];
-    
     let newSubServices;
+    
     if (currentSubServices.includes(subServiceId)) {
       newSubServices = currentSubServices.filter(id => id !== subServiceId);
     } else {
@@ -775,7 +845,7 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
       ...prev,
       [serviceKey]: newSubServices
     }));
-
+    
     // Check if parent service should be selected/deselected based on sub-service selection
     const headerServices = selectedServices[headerName] || [];
     const isParentSelected = headerServices.some(s => s.id === serviceId);
@@ -807,7 +877,7 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
         const selectedSubs = selectedSubServices[serviceKey] || [];
         
         // Filter sub-services to only include selected ones
-        const selectedSubServicesList = service.subServices 
+        const selectedSubServicesList = service.subServices
           ? service.subServices.filter(sub => selectedSubs.includes(sub.id))
           : [];
         
@@ -827,14 +897,14 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
         return serviceResult;
       })
     }));
-
+    
     // Include approval requirement in the result
     const resultWithApproval = {
       headers: result,
       requiresApproval: requiresApproval,
       customHeaderNames: customHeaderNames // Include custom header names for saving
     };
-
+    
     onComplete(resultWithApproval);
   };
 
@@ -854,168 +924,270 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
   const addonServices = currentServices.filter(s => s.category === 'addon');
 
   return (
-    <Paper sx={{ mt: 2 }}>
-      {/* Header Selection */}
-      <Box sx={{ p: 3, backgroundColor: '#f8f9fa', borderBottom: '1px solid #e2e8f0' }}>
-        <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-          Service Categories
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Select service categories and configure individual services
-        </Typography>
-
-        {/* Available Headers */}
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {availableHeaders.map(header => (
-            <Button
-              key={header}
-              variant="outlined"
-              size="small"
-              onClick={() => addHeader(header)}
-              startIcon={<AddIcon />}
-              sx={{ textTransform: 'none', mb: 1 }}
+    <Box>
+      {/* Enhanced Header Selection */}
+      <Card sx={{ mb: 4, borderRadius: 3, overflow: 'visible' }}>
+        <CardContent sx={{ p: 4 }}>
+          <Box sx={{ textAlign: 'center', mb: 3 }}>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700,
+                color: theme.palette.primary.main,
+                mb: 1
+              }}
             >
-              {header}
-            </Button>
-          ))}
-        </Stack>
-      </Box>
+              Service Categories
+            </Typography>
+            <Typography 
+              variant="body1" 
+              color="text.secondary"
+              sx={{ fontSize: '1.1rem' }}
+            >
+              Select service categories and configure individual services
+            </Typography>
+          </Box>
 
-      {/* Selected Headers */}
-      {selectedHeaders.length > 0 && (
-        <Box sx={{ p: 3, borderBottom: selectedHeaders.length > 0 ? '1px solid #e2e8f0' : 'none' }}>
-          <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-            Selected Categories ({selectedHeaders.length})
-          </Typography>
+          {/* Available Headers with enhanced styling */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              Available Categories
+            </Typography>
+            <Grid container spacing={2}>
+              {availableHeaders.map(header => (
+                <Grid item xs={12} sm={6} md={4} key={header}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => addHeader(header)}
+                    startIcon={<AddIcon />}
+                    fullWidth
+                    sx={{
+                      py: 2,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontSize: '1rem',
+                      fontWeight: 500,
+                      transition: 'all 0.3s',
+                      border: `2px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: theme.shadows[4],
+                        backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                        borderColor: theme.palette.primary.main
+                      }
+                    }}
+                  >
+                    {header}
+                  </Button>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
 
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {selectedHeaders.map(header => (
-              <Chip
-                key={header}
-                label={getHeaderDisplayName(header)}
-                onDelete={() => removeHeader(header)}
-                variant={currentHeader === header ? "filled" : "outlined"}
-                color={currentHeader === header ? "primary" : "default"}
-                onClick={() => setCurrentHeader(header)}
-                sx={{ cursor: 'pointer' }}
-              />
-            ))}
-          </Stack>
-        </Box>
-      )}
-
-      {/* Service Selection */}
-      {currentHeader && (
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h6" fontWeight={600} sx={{ mb: 3 }}>
-            Configure Services for: {getHeaderDisplayName(currentHeader)}
-          </Typography>
-
-          {/* Main Services */}
-          {mainServices.length > 0 && (
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                Core Services ({mainServices.length})
+          {/* Selected Headers with enhanced chips */}
+          {selectedHeaders.length > 0 && (
+            <Box sx={{ borderTop: selectedHeaders.length > 0 ? `1px solid ${alpha(theme.palette.divider, 0.1)}` : 'none', pt: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Selected Categories ({selectedHeaders.length})
               </Typography>
-
-                {mainServices.map(service => (
-                  <ServiceCard
-                    key={service.id}
-                    service={service}
-                    headerName={currentHeader}
-                    isSelected={selectedServices[currentHeader]?.some(s => s.id === service.id)}
-                    onToggle={() => toggleService(currentHeader, service)}
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {selectedHeaders.map(header => (
+                  <Chip
+                    key={header}
+                    label={getHeaderDisplayName(header)}
+                    onDelete={() => removeHeader(header)}
+                    variant={currentHeader === header ? "filled" : "outlined"}
+                    color={currentHeader === header ? "primary" : "default"}
+                    onClick={() => setCurrentHeader(header)}
+                    sx={{
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      py: 2.5,
+                      px: 1,
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        transform: 'scale(1.05)'
+                      }
+                    }}
                   />
                 ))}
-              </Box>
-            )}
-
-          {/* Add-on Services */}
-          {addonServices.length > 0 && (
-            <Box>
-              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                Additional Services ({addonServices.length})
-              </Typography>
-
-                {addonServices.map(service => (
-                  <ServiceCard
-                    key={service.id}
-                    service={service}
-                    headerName={currentHeader}
-                    isSelected={selectedServices[currentHeader]?.some(s => s.id === service.id)}
-                    onToggle={() => toggleService(currentHeader, service)}
-                  />
-                ))}
-              </Box>
-            )}
-
-          {mainServices.length === 0 && addonServices.length === 0 && (
-            <Alert severity="info">
-              <Typography variant="body2">
-                No services available for this category.
-              </Typography>
-            </Alert>
+              </Stack>
+            </Box>
           )}
-        </Box>
+        </CardContent>
+      </Card>
+
+      {/* Enhanced Service Selection */}
+      {currentHeader && (
+        <Fade in={!!currentHeader} timeout={600}>
+          <Card sx={{ mb: 4, borderRadius: 3 }}>
+            <CardContent sx={{ p: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <Settings sx={{ mr: 2, color: theme.palette.primary.main }} />
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    fontWeight: 600,
+                    color: theme.palette.primary.main
+                  }}
+                >
+                  Configure Services for: {getHeaderDisplayName(currentHeader)}
+                </Typography>
+              </Box>
+
+              {/* Main Services */}
+              {mainServices.length > 0 && (
+                <Box sx={{ mb: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <Business sx={{ mr: 1.5, color: theme.palette.primary.main }} />
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      Core Services ({mainServices.length})
+                    </Typography>
+                  </Box>
+                  {mainServices.map(service => (
+                    <ServiceCard
+                      key={service.id}
+                      service={service}
+                      headerName={currentHeader}
+                      isSelected={selectedServices[currentHeader]?.some(s => s.id === service.id)}
+                      onToggle={() => toggleService(currentHeader, service)}
+                    />
+                  ))}
+                </Box>
+              )}
+
+              {/* Add-on Services */}
+              {addonServices.length > 0 && (
+                <Box sx={{ mb: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <Extension sx={{ mr: 1.5, color: theme.palette.secondary.main }} />
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      Additional Services ({addonServices.length})
+                    </Typography>
+                  </Box>
+                  {addonServices.map(service => (
+                    <ServiceCard
+                      key={service.id}
+                      service={service}
+                      headerName={currentHeader}
+                      isSelected={selectedServices[currentHeader]?.some(s => s.id === service.id)}
+                      onToggle={() => toggleService(currentHeader, service)}
+                    />
+                  ))}
+                </Box>
+              )}
+
+              {mainServices.length === 0 && addonServices.length === 0 && (
+                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                  No services available for this category.
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </Fade>
       )}
 
       {selectedHeaders.length === 0 && (
-        <Box sx={{ p: 6, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-            Get Started
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Select a service category above to begin building your quotation
-          </Typography>
-        </Box>
+        <Card 
+          sx={{ 
+            textAlign: 'center',
+            py: 6,
+            backgroundColor: alpha(theme.palette.primary.main, 0.02),
+            borderRadius: 3
+          }}
+        >
+          <CardContent>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 600, color: theme.palette.primary.main }}>
+              Get Started
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Select a service category above to begin building your quotation
+            </Typography>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Complete Button */}
+      {/* Enhanced Complete Button */}
       {selectedHeaders.length > 0 && Object.values(selectedServices).some(services => services.length > 0) && (
-        <Box sx={{ p: 3, borderTop: '1px solid #e2e8f0' }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Box>
-              <Typography variant="body1" fontWeight={600}>
+        <Slide direction="up" in={true} mountOnEnter>
+          <Card 
+            sx={{ 
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.success.main, 0.05)} 100%)`,
+              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              borderRadius: 3
+            }}
+          >
+            <CardContent sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                 Ready to proceed?
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {Object.values(selectedServices).flat().length} services and {Object.values(selectedSubServices).flat().length} sub-services selected across {selectedHeaders.length} categories
+              
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                {Object.values(selectedServices).flat().length} services and{' '}
+                {Object.values(selectedSubServices).flat().length} sub-services selected across{' '}
+                {selectedHeaders.length} categories
               </Typography>
+
               {requiresApproval && (
-                <Alert severity="info" sx={{ mt: 2, maxWidth: 400 }}>
-                  <Typography variant="body2">
-                    ⚠️ This quotation will require approval due to modifications from standard package selections.
-                  </Typography>
+                <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Warning sx={{ mr: 1 }} />
+                    This quotation will require approval due to modifications from standard package selections.
+                  </Box>
                 </Alert>
               )}
-            </Box>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleComplete}
-              sx={{ textTransform: 'none', px: 4 }}
-            >
-              Proceed to Pricing
-            </Button>
-          </Stack>
-        </Box>
+
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleComplete}
+                startIcon={<Done />}
+                sx={{
+                  py: 2,
+                  px: 4,
+                  borderRadius: 2,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  boxShadow: theme.shadows[4],
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: theme.shadows[8]
+                  }
+                }}
+              >
+                Proceed to Pricing
+              </Button>
+            </CardContent>
+          </Card>
+        </Slide>
       )}
 
-      {/* Custom Header Name Dialog */}
-      <Dialog open={showCustomHeaderDialog} onClose={handleCustomHeaderCancel} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ pb: 2 }}>
-          <Typography variant="h6" fontWeight={600}>
+      {/* Enhanced Custom Header Name Dialog */}
+      <Dialog 
+        open={showCustomHeaderDialog}
+        onClose={handleCustomHeaderCancel}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
             Create Custom Header
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        </DialogTitle>
+        
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Enter a name for your custom service category
           </Typography>
-        </DialogTitle>
-        <DialogContent sx={{ pb: 2 }}>
+          
           <TextField
             autoFocus
             fullWidth
-            label="Custom Header Name"
+            variant="outlined"
             value={pendingCustomHeader}
             onChange={(e) => setPendingCustomHeader(e.target.value)}
             onKeyPress={(e) => {
@@ -1028,13 +1200,17 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
             inputProps={{ maxLength: 50 }}
           />
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCustomHeaderCancel} color="inherit">
+        
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button 
+            onClick={handleCustomHeaderCancel}
+            sx={{ textTransform: 'none' }}
+          >
             Cancel
           </Button>
-          <Button 
-            onClick={handleCustomHeaderConfirm} 
-            variant="contained" 
+          <Button
+            variant="contained"
+            onClick={handleCustomHeaderConfirm}
             disabled={!pendingCustomHeader.trim()}
             sx={{ textTransform: 'none' }}
           >
@@ -1042,6 +1218,6 @@ export default function QuotationBuilder({ onComplete, onServicesChange, quotati
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </Box>
   );
 }

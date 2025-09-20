@@ -1,4 +1,5 @@
-// src/pages/QuotationServices.jsx
+// Simplified QuotationServices.jsx with removed header details
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -11,10 +12,18 @@ import {
   Chip,
   Alert,
   CircularProgress,
+  Fade,
+  Slide,
+  useTheme,
+  alpha,
 } from "@mui/material";
 import { QuotationProvider, useQuotation } from "../context/QuotationContext";
 import QuotationBuilder from "../components/QuotationBuilder";
 import { updateQuotation, fetchQuotation } from "../services/quotations";
+import {
+  ArrowBack,
+  CheckCircle,
+} from "@mui/icons-material";
 
 // Inner component that uses the quotation context
 function QuotationServicesContent() {
@@ -25,7 +34,8 @@ function QuotationServicesContent() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [quotationData, setQuotationData] = useState(null);
   const { loadExistingData } = useQuotation();
-  
+  const theme = useTheme();
+
   // Load existing quotation data when editing
   useEffect(() => {
     const loadExistingQuotation = async () => {
@@ -47,17 +57,18 @@ function QuotationServicesContent() {
                     id: service.id,
                     name: service.label || service.serviceName,
                     label: service.label || service.serviceName,
-                    subServices: service.subServices ? 
+                    subServices: service.subServices ?
                       service.subServices.reduce((acc, subService) => {
                         acc[subService.id || subService.text] = subService.text || subService.name;
                         return acc;
                       }, {}) : {}
                   };
-                  
+
                   // Preserve year/quarter selections if they exist
                   if (service.selectedYears) {
                     transformedService.selectedYears = service.selectedYears;
                   }
+                  
                   if (service.selectedQuarters) {
                     transformedService.selectedQuarters = service.selectedQuarters;
                   }
@@ -65,7 +76,7 @@ function QuotationServicesContent() {
                   return transformedService;
                 })
               };
-              
+
               // Handle custom headers - preserve original name if it's a custom header
               if (header.originalName && header.originalName.startsWith('custom-')) {
                 headerData.originalName = header.originalName;
@@ -73,7 +84,7 @@ function QuotationServicesContent() {
               
               return headerData;
             });
-            
+
             console.log('Transformed headers for context:', transformedHeaders);
             loadExistingData(transformedHeaders);
           }
@@ -87,7 +98,7 @@ function QuotationServicesContent() {
         setInitialLoading(false);
       }
     };
-    
+
     loadExistingQuotation();
   }, [id, loadExistingData]);
 
@@ -96,10 +107,10 @@ function QuotationServicesContent() {
       try {
         setLoading(true);
         setError("");
-        
+
         // Handle both old format (array) and new format (object with headers and requiresApproval)
         let selectedHeaders, requiresApproval = false, customHeaderNames = {};
-        
+
         if (Array.isArray(result)) {
           // Old format - backward compatibility
           selectedHeaders = result;
@@ -109,13 +120,14 @@ function QuotationServicesContent() {
           requiresApproval = result.requiresApproval;
           customHeaderNames = result.customHeaderNames || {};
         }
-        
+
         // Transform the selected headers to the expected format
         const headers = selectedHeaders.map(({ name, originalName, services = [] }) => {
           const headerData = {
             header: name,
             services: services.map((service) => {
               const { id, name, label, subServices = {}, selectedYears, selectedQuarters, quarterCount, ...otherProps } = service;
+              
               const transformedService = {
                 id: id || name,
                 label: label || name,
@@ -124,25 +136,26 @@ function QuotationServicesContent() {
                   text: ss,
                 })),
               };
-              
+
               // Include quarter information if present
               if (selectedYears && selectedYears.length > 0) {
                 transformedService.selectedYears = selectedYears;
               }
+              
               if (selectedQuarters && selectedQuarters.length > 0) {
                 transformedService.selectedQuarters = selectedQuarters;
               }
+              
               if (quarterCount) {
                 transformedService.quarterCount = quarterCount;
               }
-              
+
               // Include any other properties
               Object.assign(transformedService, otherProps);
-              
               return transformedService;
             })
           };
-          
+
           // Include original name for custom headers
           if (originalName && originalName.startsWith('custom-')) {
             headerData.originalName = originalName;
@@ -153,16 +166,16 @@ function QuotationServicesContent() {
 
         console.log("Saving headers:", headers); // Debug log
         console.log("Requires approval:", requiresApproval); // Debug log
-        
+
         // Prepare update data
-        const updateData = { 
+        const updateData = {
           headers,
           ...(requiresApproval && { requiresApproval: true })
         };
-        
+
         // ✅ Use the fixed updateQuotation function with authentication
         await updateQuotation(id, updateData);
-        
+
         // Navigate to pricing step
         navigate(`/quotations/${id}/pricing`);
       } catch (err) {
@@ -178,73 +191,115 @@ function QuotationServicesContent() {
   // Show initial loading while fetching existing data
   if (initialLoading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <Box sx={{ textAlign: 'center' }}>
-            <CircularProgress size={40} sx={{ mb: 2 }} />
-            <Typography variant="h6" color="text.secondary">
-              Loading quotation data...
-            </Typography>
-          </Box>
-        </Box>
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: 'center' }}>
+        <CircularProgress size={48} sx={{ color: theme.palette.primary.main }} />
+        <Typography variant="h6" sx={{ mt: 2, color: theme.palette.text.secondary }}>
+          Loading quotation data...
+        </Typography>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
-      {/* Header - matching Dashboard style */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
+    <Container maxWidth="lg" sx={{ py: 3 }}>
+      {/* Simple Header */}
+      <Fade in={true} timeout={600}>
+        <Box sx={{ mb: 4 }}>
+          <Typography 
+            variant="h3" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 700,
+              color: theme.palette.primary.main,
+              mb: 1,
+              fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+            }}
+          >
             {id === 'new' ? 'Services Selection' : 'Edit Services Selection'}
           </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            {id === 'new' ? 'Select the services you need for this quotation' : `Editing services for quotation #${id}`}
+          
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: theme.palette.text.secondary,
+              mb: 3,
+              fontWeight: 400
+            }}
+          >
+            {id === 'new' 
+              ? 'Select the services you need for this quotation' 
+              : `Editing services for quotation #${id}`
+            }
           </Typography>
-          {quotationData && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Project: {quotationData.projectName || 'N/A'} | Developer: {quotationData.developerName || 'N/A'}
-            </Typography>
-          )}
+
+          <Button
+            variant="outlined"
+            onClick={() => navigate(id === 'new' ? "/quotations/new" : "/dashboard")}
+            startIcon={<ArrowBack />}
+            sx={{ 
+              textTransform: 'none',
+              borderRadius: 2,
+              px: 3,
+              py: 1,
+              borderColor: theme.palette.primary.main,
+              color: theme.palette.primary.main,
+              '&:hover': {
+                backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                borderColor: theme.palette.primary.main,
+              }
+            }}
+          >
+            ← {id === 'new' ? 'Back to Project Details' : 'Back to Dashboard'}
+          </Button>
         </Box>
-        <Button
-          variant="outlined"
-          onClick={() => navigate(id === 'new' ? "/quotations/new" : "/dashboard")}
-          sx={{ textTransform: 'none' }}
-        >
-          ← {id === 'new' ? 'Back to Project Details' : 'Back to Dashboard'}
-        </Button>
-      </Box>
+      </Fade>
 
-      {/* Error Display */}
+      {/* Enhanced Error Display */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
+        <Slide direction="down" in={!!error} mountOnEnter unmountOnExit>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3,
+              borderRadius: 2,
+              '& .MuiAlert-icon': {
+                alignItems: 'center'
+              }
+            }}
+          >
+            {error}
+          </Alert>
+        </Slide>
       )}
 
-      {/* Success message for loaded data */}
-      {quotationData && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          ✅ Loaded existing quotation data. You can now modify the services and continue.
-        </Alert>
-      )}
-
-      {/* Loading State */}
+      {/* Enhanced Loading State */}
       {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', my: 3 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          mb: 3,
+          p: 3,
+          backgroundColor: alpha(theme.palette.primary.main, 0.05),
+          borderRadius: 2,
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`
+        }}>
           <CircularProgress size={24} sx={{ mr: 2 }} />
-          <Typography>Saving services...</Typography>
+          <Typography variant="body1" sx={{ fontWeight: 500 }}>
+            Saving services...
+          </Typography>
         </Box>
       )}
 
       {/* Quotation Builder */}
-      <QuotationBuilder 
-        onComplete={handleQuotationComplete}
-        loading={loading}
-        quotationData={quotationData}
-      />
+      <Fade in={true} timeout={800}>
+        <Box>
+          <QuotationBuilder
+            onComplete={handleQuotationComplete}
+            quotationData={quotationData}
+          />
+        </Box>
+      </Fade>
     </Container>
   );
 }

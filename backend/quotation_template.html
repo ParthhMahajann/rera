@@ -1,97 +1,520 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Quotation</title>
-<style>
-  body{font-family:Arial, sans-serif;font-size:13px;margin:20px;color:#000}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm 15mm 15mm 15mm;
+        }
 
-  .header{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    border-bottom:2px solid #000;
-    padding-bottom:6px;
-    margin-bottom:12px
-  }
-  .header span{font-size:20px;font-weight:700;letter-spacing:.3px;align-self:flex-end}
-  .header img{height:40px;width:auto;align-self:flex-start}
+        * {
+            box-sizing: border-box;
+        }
 
-  table{width:100%;border-collapse:collapse;margin-bottom:20px}
-  td{padding:8px 10px;vertical-align:top}
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            background: white;
+        }
 
-  .row td{border-top:2px solid #000}
-  .row.first td{border-top:1.5px solid #000}
+        /* Page Header - Logo RIGHT, Title CENTER */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #000;
+            width: 100%;
+            position: relative;
+        }
 
-  .vcol{border-left:1.5px solid #000;border-right:1.5px solid #000;width:58px}
-  .vertical-text{
-    writing-mode:vertical-rl;
-    transform:rotate(180deg);
-    text-align:center;
-    font-weight:700;
-    font-size:12px;
-    letter-spacing:1.1px;
-    white-space:nowrap
-  }
+        .header-left-spacer {
+            flex: 1;
+        }
 
-  .services{font-size:12.75px;line-height:1.35;padding-left:14px}
-  .services div{margin-bottom:4px}
+        .header-center {
+            flex: 2;
+            text-align: center;
+        }
 
-  .price{
-    border-left:1.5px solid #000;
-    border-right:1.5px solid #000;
-    width:125px;
-    white-space:nowrap;
-    font-weight:700;
-    text-align:right;
-    font-size:13px
-  }
+        .page-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin: 0;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-  .total-row td{border-top:2px solid #000 !important;font-weight:700;text-align:right;font-size:13px}
-  .total-row td:first-child{border-left:1.5px solid #000}
-  .total-row td:last-child{border-right:1.5px solid #000}
-  .total-row .price{border-left:1.5px solid #000}
+        .header-right {
+            flex: 1;
+            text-align: right;
+        }
 
-  .terms{font-size:12px;margin-top:18px}
-  .terms strong{display:block;margin-bottom:4px}
-  .terms ul{margin:0 0 0 18px;padding:0}
-  .terms li{margin:3px 0}
-  .ref-number{margin-top:18px;font-weight:700;font-size:13px}
-</style>
+        .logo {
+            height: 50px;
+            width: auto;
+            max-width: 150px;
+        }
+
+        .logo-fallback {
+            background: linear-gradient(45deg, #f4d03f, #f39c12);
+            color: #000;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        /* Service Section */
+        .service-section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .service-container {
+            display: flex;
+            border: 2px solid #000;
+            min-height: 80px;
+        }
+
+        /* Service Details on LEFT (75% width) */
+        .service-details-section {
+            flex: 1;
+            padding: 15px;
+            background-color: #ffffff;
+            border-right: 2px solid #000;
+            width: 75%;
+        }
+
+        .service-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #000;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        .sub-services-container {
+            margin-top: 10px;
+        }
+
+        .sub-services-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sub-services-list li {
+            margin-bottom: 8px;
+            padding-left: 15px;
+            position: relative;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #333;
+            text-align: justify;
+        }
+
+        .sub-services-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            color: #000;
+        }
+
+        /* Special "Included in scope" section */
+        .included-section {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .included-title {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 8px;
+            color: #000;
+        }
+
+        .included-subtitle {
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* Amount on RIGHT (25% width) */
+        .service-amount-section {
+            flex: 0 0 200px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 25%;
+        }
+
+        .service-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 5px;
+        }
+
+        .amount-currency {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Page Break */
+        .page-break {
+            page-break-before: always;
+        }
+
+        /* Total and Terms Page */
+        .total-terms-page {
+            page-break-before: always;
+        }
+
+        .total-section {
+            background-color: #f0f8ff;
+            border: 3px solid #000;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .total-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #000;
+        }
+
+        .total-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .terms-section {
+            margin-top: 30px;
+        }
+
+        .terms-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #000;
+            text-align: center;
+            text-decoration: underline;
+        }
+
+        .terms-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .terms-list li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+            font-size: 11px;
+            line-height: 1.6;
+            color: #333;
+            text-align: justify;
+        }
+
+        .terms-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            color: #000;
+        }
+
+        /* Disclaimer Page */
+        .disclaimer-page {
+            page-break-before: always;
+        }
+
+        .disclaimer-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #000;
+            text-align: center;
+            text-decoration: underline;
+        }
+
+        .disclaimer-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .disclaimer-list li {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            position: relative;
+            font-size: 11px;
+            line-height: 1.6;
+            color: #333;
+            text-align: justify;
+        }
+
+        .disclaimer-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .disclaimer-section-title {
+            font-weight: bold;
+            color: #000;
+        }
+
+        /* Print Optimization */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+            }
+
+            .total-section {
+                background-color: #f0f8ff !important;
+                border: 3px solid #000 !important;
+            }
+
+            .logo-fallback {
+                background: linear-gradient(45deg, #f4d03f, #f39c12) !important;
+                color: #000 !important;
+            }
+
+            .service-amount-section {
+                background-color: #f9f9f9 !important;
+            }
+
+            .included-section {
+                background-color: #f5f5f5 !important;
+            }
+        }
+
+        /* Package Total Row */
+        .package-total-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e6f3ff;
+            border: 2px solid #1976d2;
+            text-align: center;
+        }
+
+        .package-total-text {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        /* Reference Number */
+        .reference-section {
+            margin-top: 30px;
+            text-align: center;
+            padding-top: 15px;
+            border-top: 1px solid #ccc;
+        }
+
+        .reference-number {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-  <div class="header">
-    <span>{{ header }}</span>
-    <img src="{{ logo_src }}" alt="Logo">
-  </div>
+    {% for header in headers %}
+        {% if loop.index0 > 0 %}
+            <div class="page-break"></div>
+        {% endif %}
 
-  <table>
-    {% for section in sections %}
-    <tr class="row {% if loop.first %}first{% endif %}">
-      <td class="vcol"><div class="vertical-text">{{ section.header }}</div></td>
-      <td class="services">
-        {% for item in section.services %}
-          <div>• {{ item }}</div>
+        <!-- Page Header for each section -->
+        <div class="page-header">
+            <div class="header-left-spacer"></div>
+            <div class="header-center">
+                <h1 class="page-title">{{ header.name }}</h1>
+            </div>
+            <div class="header-right">
+                {% if logo_src %}
+                    <img src="{{ logo_src }}" alt="RERA Easy Logo" class="logo">
+                {% else %}
+                    <div class="logo-fallback">RERA<sup style="font-size:10px;">Easy</sup></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Services for this header -->
+        {% for service in header.services %}
+            <div class="service-section">
+                <div class="service-container">
+                    <!-- Service Details on LEFT (75%) -->
+                    <div class="service-details-section">
+                        <div class="service-name">{{ service.name }}</div>
+
+                        {% if service.subServices and service.subServices|length > 0 %}
+                        <div class="sub-services-container">
+                            <ul class="sub-services-list">
+                                {% for sub_service in service.subServices %}
+                                    {% if sub_service %}
+                                        {% if sub_service is mapping %}
+                                        <li>{{ sub_service.name if sub_service.name else sub_service|string }}</li>
+                                        {% else %}
+                                        <li>{{ sub_service|string }}</li>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Check if this service has some sub-services that should show "Included in scope" -->
+                        {% if header.name and "LIAISONING" in service.name.upper() or service.price == 0 %}
+                        <div class="included-section">
+                            <div class="included-title">Included</div>
+                            <div class="included-subtitle">in scope</div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Amount Section on RIGHT (25%) -->
+                    <div class="service-amount-section">
+                        {% if display_mode != 'lumpsum' %}
+                            {% if service.display_price is not none and service.display_price > 0 %}
+                                <div class="service-amount">₹{{ "{:,.0f}".format(service.display_price) }}/-</div>
+                                <div class="amount-currency">Amount</div>
+                            {% elif service.price > 0 %}
+                                <div class="service-amount">₹{{ "{:,.0f}".format(service.price) }}/-</div>
+                                <div class="amount-currency">Amount</div>
+                            {% else %}
+                                <div class="service-amount">Included</div>
+                                <div class="amount-currency">in scope</div>
+                            {% endif %}
+                        {% else %}
+                            {% if header.is_package and header.package_total > 0 and loop.last %}
+                                <div class="service-amount">₹{{ "{:,.0f}".format(header.package_total) }}/-</div>
+                                <div class="amount-currency">Package Total</div>
+                            {% else %}
+                                <div class="service-amount">Included</div>
+                                <div class="amount-currency">in scope</div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         {% endfor %}
-      </td>
-      <td class="price">₹ {{ section.amount }}<sup>*</sup></td>
-    </tr>
+
+        <!-- Package Total if applicable -->
+        {% if header.is_package and header.package_total > 0 and display_mode != 'lumpsum' %}
+        <div class="package-total-section">
+            <div class="package-total-text">
+                {{ header.name }} Total: ₹{{ "{:,.0f}".format(header.package_total) }}/-
+            </div>
+        </div>
+        {% endif %}
     {% endfor %}
-    <tr class="total-row">
-      <td colspan="2">Total Payable Amount</td>
-      <td class="price">₹ {{ total }}<sup>*</sup></td>
-    </tr>
-  </table>
 
-  <div class="terms">
-    <strong>Terms & Conditions:</strong>
-    <ul>
-      {% for term in terms %}
-        <li>{{ term }}</li>
-      {% endfor %}
-    </ul>
-  </div>
+    <!-- Total and Terms Page -->
+    <div class="total-terms-page">
+        <!-- Page Header for Total Page -->
+        <div class="page-header">
+            <div class="header-left-spacer"></div>
+            <div class="header-center">
+                <h1 class="page-title">QUOTATION SUMMARY</h1>
+            </div>
+            <div class="header-right">
+                {% if logo_src %}
+                    <img src="{{ logo_src }}" alt="RERA Easy Logo" class="logo">
+                {% else %}
+                    <div class="logo-fallback">RERA<sup style="font-size:10px;">Easy</sup></div>
+                {% endif %}
+            </div>
+        </div>
 
-  <div class="ref-number">{{ ref_number }}</div>
+        <!-- Total Section -->
+        <div class="total-section">
+            <div class="total-title">TOTAL PAYABLE AMOUNT</div>
+            <div class="total-amount">₹{{ "{:,.0f}".format(total_amount) }}/-</div>
+        </div>
+
+        <!-- Terms and Conditions -->
+        {% if terms and terms|length > 0 %}
+        <div class="terms-section">
+            <div class="terms-title">Terms & Conditions</div>
+            <ul class="terms-list">
+                {% for term in terms %}
+                <li>{{ term }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Reference Number -->
+        <div class="reference-section">
+            <div class="reference-number">{{ ref_number }}</div>
+        </div>
+    </div>
+
+    <!-- Disclaimer Page -->
+    <div class="disclaimer-page">
+        <!-- Page Header for Disclaimer -->
+        <div class="page-header">
+            <div class="header-left-spacer"></div>
+            <div class="header-center">
+                <h1 class="page-title">DISCLAIMER</h1>
+            </div>
+            <div class="header-right">
+                {% if logo_src %}
+                    <img src="{{ logo_src }}" alt="RERA Easy Logo" class="logo">
+                {% else %}
+                    <div class="logo-fallback">RERA<sup style="font-size:10px;">Easy</sup></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Disclaimer Content -->
+        <div class="disclaimer-title">Disclaimer:</div>
+        <ul class="disclaimer-list">
+            <li><span class="disclaimer-section-title">Limitation of Liability:</span> We shall not be liable for any direct, indirect, incidental, or damages arising out of or relating to the services provided.</li>
+
+            <li><span class="disclaimer-section-title">Confidentiality:</span> We will maintain the confidentiality of all sensitive information provided by the client, subject to any legal obligations.</li>
+
+            <li><span class="disclaimer-section-title">Intellectual Property Rights:</span> Any intellectual property developed during the course of providing services shall remain the property of the respective party unless otherwise agreed upon in writing.</li>
+
+            <li><span class="disclaimer-section-title">Force Majeure:</span> We shall not be liable for any delay or failure to perform our obligations under this agreement due to circumstances beyond our reasonable control, including but not limited to acts of God, natural disasters, strikes, or governmental actions.</li>
+
+            <li><span class="disclaimer-section-title">Client Responsibilities:</span> The client is responsible for providing accurate and complete information necessary for the provision of services.</li>
+
+            <li><span class="disclaimer-section-title">Scope Changes:</span> Any changes to the scope of services may result in adjustments to the project timeline and costs.</li>
+
+            <li><span class="disclaimer-section-title">Binding Agreement:</span> This proposal is provided solely for the purpose of outlining our scope of services and should not be construed as a definitive document or contract binding on both parties.</li>
+        </ul>
+    </div>
 </body>
 </html>
